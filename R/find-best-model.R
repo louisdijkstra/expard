@@ -16,7 +16,7 @@
 #' 
 #' @return A \code{tibble} data frame
 #' @examples 
-#' cohort <- hccdsim::generate_cohort(n_patients = 100, simulation_time = 8)
+#' cohort <- expard::generate_cohort(n_patients = 100, simulation_time = 8)
 #' find_best_model(cohort, verbose = FALSE)
 #' @export
 find_best_model <- function(cohort,

@@ -11,6 +11,9 @@ cohort <- expard::generate_cohort(n_patients = 1000,
 fit_model(cohort, risk_model = expard::risk_model_no_effect()) 
 fit_model(cohort, risk_model = expard::risk_model_immediate()) 
 
+risk_model <- risk_model_immediate()
+
+
 x <- c(0, 0, rep(1,10), rep(0, 20))
 drug_prescriptions <- x
 x

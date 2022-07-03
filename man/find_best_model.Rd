@@ -35,6 +35,6 @@ Applies all risk models to a given cohort and determines
 the AIC, BIC, the test statistic and \eqn{p}-value.
 }
 \examples{
-cohort <- hccdsim::generate_cohort(n_patients = 100, simulation_time = 8)
+cohort <- expard::generate_cohort(n_patients = 100, simulation_time = 8)
 find_best_model(cohort, verbose = FALSE)
 }

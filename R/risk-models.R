@@ -59,6 +59,16 @@ risk_model_immediate <- function() {
       0  # lowest risk
     }
   }
+  # 
+  # model <- list(
+  #   name = "immediate", 
+  #   fn = fn, 
+  #   n_params = 2, 
+  #   params = c("beta0", "beta"), 
+  #   constraints = c("none", "none")
+  # )
+  # class(model) <- "expard-model"
+  # return(model)
 }
 
 #' Risk Model 'Withdrawal'
