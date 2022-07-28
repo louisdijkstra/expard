@@ -24,7 +24,7 @@
 #' (patient_profile <- patient_model())
 #' 
 #' # choose a risk model (effect of the drug is immediate)
-#' risk_model <- risk_model_immediate()
+#' risk_model <- risk_model_current_use()
 #' 
 #' # how the drug is prescribed over time
 #' drug_model <- drug_model_markov_chain() 
@@ -40,6 +40,9 @@
 #' min_chance_adr <- probability_model_sex(prob_male = .01, prob_female = .05)
 #' max_chance_adr <- probability_model_sex(prob_male = .2, prob_female = .3)
 #' 
+#' # chance that the patient is exposed to the drug
+#' prob_exposure <- probability_model_sex(prob_male = .9, prob_female = .7)
+#' 
 #' generate_cohort(n_patients = 10, 
 #'                simulation_time = 20, 
 #'                risk_model      = risk_model, 
@@ -54,9 +57,9 @@
 #' @export
 generate_cohort <- function(n_patients = 100, 
                             simulation_time = 30, 
-                            risk_model      = risk_model_immediate(), 
+                            risk_model      = risk_model_current_use(), 
                             drug_model      = drug_model_markov_chain(),
-                            adr_model       = adr_model_no_effect(), 
+                            prob_exposure   = probability_model_constant(1), 
                             min_chance_drug = probability_model_constant(.01),
                             max_chance_drug = probability_model_constant(.5),
                             min_chance_adr  = probability_model_constant(.001), 
@@ -74,25 +77,26 @@ generate_cohort <- function(n_patients = 100,
   }
   
   # generate patients 
-  lapply(1:n_patients, function(i) { 
+  for (i in 1:n_patients) { 
     patient_profile <- patient_model() # generate the profile of the patient, e.g., sex, age
-    patient <- generate_patient(simulation_time, 
+    patient <- generate_patient(simulation_time = simulation_time, 
                                 risk_model, 
                                 drug_model, 
-                                adr_model, 
+                                prob_exposure,
                                 min_chance_drug, 
                                 max_chance_drug,
                                 min_chance_adr, 
                                 max_chance_adr, 
                                 patient_profile = patient_profile) 
-    drug_history[i, ] <<- patient$drug_history 
-    adr_history[i, ] <<- patient$adr_history
-    patient_profiles[[i]] <<- patient_profile
+    
+    drug_history[i, ] <- patient$drug_history 
+    adr_history[i, ] <- patient$adr_history
+    patient_profiles[[i]] <- patient_profile
     
     if (verbose & i %% 100 == 0) { 
       setTxtProgressBar(pb, i)
     }
-  })
+  }
   
   if (verbose) { 
     close(pb) 

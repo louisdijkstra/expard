@@ -6,7 +6,8 @@
 #' @param simulation_time The total number of time steps
 #' @param risk_model One of the risk models
 #' @param drug_model One of the drug models
-#' @param adr_model One of the ADR effect models
+#' @param prob_exposure The probability that a patient 
+#'            is exposed to a drug 
 #' @param min_chance The probability of the ADR when 
 #'            the drug history has no effect 
 #' @param max_chance The probability of the ADR when 
@@ -33,13 +34,10 @@
 #' (patient_profile <- patient_model())
 #' 
 #' # choose a risk function
-#' risk_model <- risk_model_immediate()
+#' risk_model <- risk_model_current_use()
 #' 
 #' # how the drug is prescribed over time
 #' drug_model <- drug_model_markov_chain() 
-#' 
-#' # how the occurence of an ADR affect the prescription of the drug
-#' adr_model = adr_model_no_effect()
 #' 
 #' # minimum and maximal probabilities for the drug being prescribed
 #' min_chance_drug <- probability_model_sex(prob_male = .1, prob_female = .2)
@@ -49,10 +47,13 @@
 #' min_chance_adr <- probability_model_sex(prob_male = .01, prob_female = .05)
 #' max_chance_adr <- probability_model_sex(prob_male = .2, prob_female = .3)
 #' 
+#' # chance that the patient is exposed to the drug
+#' prob_exposure <- probability_model_sex(prob_male = .9, prob_female = .7)
+#' 
 #' generate_patient(simulation_time = 100, 
 #'                  risk_model, 
 #'                  drug_model,
-#'                  adr_model, 
+#'                  prob_exposure, 
 #'                  min_chance_drug,
 #'                  max_chance_drug,
 #'                  min_chance_adr, 
@@ -60,53 +61,33 @@
 #'                  patient_profile = patient_profile)                
 #' @export
 generate_patient <- function(simulation_time = 100, 
-                             risk_model = risk_model_immediate(), 
+                             risk_model = risk_model_current_use(), 
                              drug_model = drug_model_markov_chain(),
-                             adr_model = adr_model_no_effect(), 
+                             prob_exposure   = probability_model_constant(1),
                              min_chance_drug = probability_model_constant(.01),
                              max_chance_drug = probability_model_constant(.5),
-                             min_chance_adr = probability_model_constant(.001), 
-                             max_chance_adr = probability_model_constant(.2), 
+                             min_chance_adr  = probability_model_constant(.001), 
+                             max_chance_adr  = probability_model_constant(.2), 
                              patient_profile = NULL) { 
   
-  # determine first time the drug is prescribed 
-  t <- determine_first_prescription(1, simulation_time, min_chance_drug(patient_profile)) 
-  
-  # initialize the drug and ADR time processes 
-  drug_history <- c(rep(0, t - 1), 1, rep(NA, simulation_time - t))
-  adr_history <- c(rbinom(t - 1, 1, min_chance_adr(patient_profile)), rep(NA, simulation_time - t + 1))
-  
-  adr_history[t] <- update_adr_history(drug_history[1:(t-1)],
-                                     risk_model, 
-                                     min_chance_adr,
-                                     max_chance_adr, 
-                                     patient_profile) 
-  
-  if (t == simulation_time) { 
-    return(
-      list(
-        drug_history = drug_history,
-        adr_history = adr_history
-      )
-    )
+  # generate drug history
+  if (rbinom(1,1, prob_exposure(patient_profile))) { 
+    drug_history <- generate_drug_history(simulation_time = simulation_time, 
+                                          drug_model = drug_model,
+                                          min_chance = min_chance_drug, 
+                                          max_chance = max_chance_drug, 
+                                          patient_profile = patient_profile) 
+  } else { 
+    drug_history <- rep(0, simulation_time) 
   }
   
-  # simulate the remaining time points
-  sapply((t+1):simulation_time, 
-         function(k) {
-            drug_history[k] <<- update_drug_prescription(drug_history[1:(k-1)], 
-                                                         adr_history[1:(k-1)], 
-                                                         drug_model,
-                                                         adr_model, 
-                                                         min_chance_drug,
-                                                         max_chance_drug, 
-                                                         patient_profile)
-            adr_history[k] <<- update_adr_history(drug_history[1:k],
-                                                  risk_model, 
-                                                  min_chance_adr,
-                                                  max_chance_adr, 
-                                                  patient_profile) 
-         }) 
+  # generate ADR history given a risk model and the drug history                                    
+  adr_history <- generate_adr_history(drug_history = drug_history, 
+                                      risk_model = risk_model,
+                                      min_chance = min_chance_drug, 
+                                      max_chance = max_chance_drug, 
+                                      patient_profile = patient_profile)
+  
   
   res <- list(
     drug_history = drug_history,

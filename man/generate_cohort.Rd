@@ -7,9 +7,9 @@
 generate_cohort(
   n_patients = 100,
   simulation_time = 30,
-  risk_model = risk_model_immediate(),
+  risk_model = risk_model_current_use(),
   drug_model = drug_model_markov_chain(),
-  adr_model = adr_model_no_effect(),
+  prob_exposure = probability_model_constant(1),
   min_chance_drug = probability_model_constant(0.01),
   max_chance_drug = probability_model_constant(0.5),
   min_chance_adr = probability_model_constant(0.001),
@@ -27,7 +27,8 @@ generate_cohort(
 
 \item{drug_model}{One of the drug models}
 
-\item{adr_model}{One of the ADR effect models}
+\item{prob_exposure}{The probability that a patient
+is exposed to a drug}
 
 \item{min_chance_drug}{The probability of the drug being prescribed
 when the drug history and the ADR history have no effect}
@@ -59,7 +60,7 @@ patient_model <- patient_model_sex(prob_male = 0.5)
 (patient_profile <- patient_model())
 
 # choose a risk model (effect of the drug is immediate)
-risk_model <- risk_model_immediate()
+risk_model <- risk_model_current_use()
 
 # how the drug is prescribed over time
 drug_model <- drug_model_markov_chain() 
@@ -74,6 +75,9 @@ max_chance_drug <- probability_model_sex(prob_male = .5, prob_female = .53)
 # minimum and maximal probabilities for the ADR occurring 
 min_chance_adr <- probability_model_sex(prob_male = .01, prob_female = .05)
 max_chance_adr <- probability_model_sex(prob_male = .2, prob_female = .3)
+
+# chance that the patient is exposed to the drug
+prob_exposure <- probability_model_sex(prob_male = .9, prob_female = .7)
 
 generate_cohort(n_patients = 10, 
                simulation_time = 20, 

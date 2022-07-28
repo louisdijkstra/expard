@@ -9,7 +9,7 @@
 # 1. Zero is minimal risk, 1 is full risk. 
 ##############################################
 
-#' Risk Model 'No Effect'
+#' Risk Model 'No Association'
 #' 
 #' A risk model reflects how the probability of 
 #' suffering the ADR changes with the drug exposures
@@ -27,7 +27,7 @@
 #' risk_model() 
 #' # -> 0
 #' @export
-risk_model_no_effect <- function() { 
+risk_model_no_association <- function() { 
   function(drug_history, ...) { 
     0 # always lowest risk
   }
@@ -51,7 +51,7 @@ risk_model_no_effect <- function() {
 #' risk_model <- risk_model_immediate() 
 #' risk_model(drug_history) 
 #' @export
-risk_model_immediate <- function() {
+risk_model_current_use <- function() {
   function(drug_history, ...) { 
     if (drug_history[length(drug_history)]) { 
       1  # highest risk
@@ -59,16 +59,6 @@ risk_model_immediate <- function() {
       0  # lowest risk
     }
   }
-  # 
-  # model <- list(
-  #   name = "immediate", 
-  #   fn = fn, 
-  #   n_params = 2, 
-  #   params = c("beta0", "beta"), 
-  #   constraints = c("none", "none")
-  # )
-  # class(model) <- "expard-model"
-  # return(model)
 }
 
 #' Risk Model 'Withdrawal'
@@ -116,6 +106,55 @@ risk_model_withdrawal <- function(rate) {
     }
   }
 }
+
+
+#' Risk Model 'Withdrawal'
+#' 
+#' A risk model reflects how the probability of 
+#' suffering the ADR changes with the drug exposures
+#' of a patient. It returns \code{0} when the drug 
+#' prescription history has no effect, and \code{1} 
+#' when the patient is at maximal risk.
+#' In this case, once the patient is no longer exposed
+#' to the drug, the probability of the ADR peaks 
+#' and then dissipates exponentially. 
+#' Let \eqn{\tau} be the number of time points since
+#' the patient was prescribed the drug last. The return
+#' value is the given by 
+#' \deqn{\exp(-\gamma \cdot (\tau - 1))} 
+#' where \eqn{\gamma} is \code{rate}.
+#' 
+#' @param rate The rate with which the risk dissipates
+#' 
+#' @return A risk model
+#' @family Risk models
+#' @examples 
+#' drug_history <- c(1, 0, 1, 0, 0)
+#' 
+#' risk_model <- risk_model_withdrawal(rate = 1.2) 
+#' risk_model(drug_history) 
+#' @export
+risk_model_past <- function(past) {
+  
+  
+  # check correctness input
+  if (past <= 0) { 
+    stop("past should be > 0") 
+  }
+  
+  function(drug_history, ...) { 
+    
+    n_timepoints <- length(drug_history) 
+    m <- max(n_timepoints - past + 1, 1)
+    
+    if (any(as.logical(drug_history[m:n_timepoints])) == 1) { 
+      return(1) 
+    } else { 
+      return(0) 
+    }
+  }
+}
+
 
 #' Risk Model 'Long Time After'
 #' 

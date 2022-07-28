@@ -6,9 +6,9 @@
 \usage{
 generate_patient(
   simulation_time = 100,
-  risk_model = risk_model_immediate(),
+  risk_model = risk_model_current_use(),
   drug_model = drug_model_markov_chain(),
-  adr_model = adr_model_no_effect(),
+  prob_exposure = probability_model_constant(1),
   min_chance_drug = probability_model_constant(0.01),
   max_chance_drug = probability_model_constant(0.5),
   min_chance_adr = probability_model_constant(0.001),
@@ -23,7 +23,8 @@ generate_patient(
 
 \item{drug_model}{One of the drug models}
 
-\item{adr_model}{One of the ADR effect models}
+\item{prob_exposure}{The probability that a patient
+is exposed to a drug}
 
 \item{min_chance_drug}{The probability of the drug being prescribed
 when the drug history and the ADR history have no effect}
@@ -59,13 +60,10 @@ patient_model <- patient_model_sex(prob_male = 0.5)
 (patient_profile <- patient_model())
 
 # choose a risk function
-risk_model <- risk_model_immediate()
+risk_model <- risk_model_current_use()
 
 # how the drug is prescribed over time
 drug_model <- drug_model_markov_chain() 
-
-# how the occurence of an ADR affect the prescription of the drug
-adr_model = adr_model_no_effect()
 
 # minimum and maximal probabilities for the drug being prescribed
 min_chance_drug <- probability_model_sex(prob_male = .1, prob_female = .2)
@@ -75,10 +73,13 @@ max_chance_drug <- probability_model_sex(prob_male = .5, prob_female = .53)
 min_chance_adr <- probability_model_sex(prob_male = .01, prob_female = .05)
 max_chance_adr <- probability_model_sex(prob_male = .2, prob_female = .3)
 
+# chance that the patient is exposed to the drug
+prob_exposure <- probability_model_sex(prob_male = .9, prob_female = .7)
+
 generate_patient(simulation_time = 100, 
                  risk_model, 
                  drug_model,
-                 adr_model, 
+                 prob_exposure, 
                  min_chance_drug,
                  max_chance_drug,
                  min_chance_adr, 

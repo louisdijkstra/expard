@@ -1,5 +1,7 @@
 library(expard)
 
+cohort <- expard::generate_cohort()
+
 cohort <- expard::generate_cohort(n_patients = 1000, 
                                    simulation_time = 100, 
                                    risk_model = expard::risk_model_immediate(), 

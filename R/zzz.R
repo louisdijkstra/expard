@@ -1,7 +1,7 @@
-#' \code{hccdsim}: A package for simulation longitudinal health care 
-#' claims data.
+#' \code{expard}: A package for simulating electronic
+#' health care data and fitting models
 #'
 #' @docType package
 #' @author Louis Dijkstra
-#' @name hccdsim
+#' @name expard
 NULL
