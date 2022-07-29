@@ -9,7 +9,7 @@
 #' patient models, such as \code{\link{patient_model_sex}} 
 #' require the estimation of more parameters which is currently
 #' not supported. 
-#' @section Cohort data oject:
+#' @section Cohort data object:
 #' Minimal requirement is that the cohort is a list with 
 #' two matrix with the items
 #' \itemize{
@@ -24,8 +24,7 @@
 #' for more details on the \code{cohort} object. 
 #' 
 #' @param cohort A cohort dataset. See details below. 
-#' @param risk_model A risk model function 
-#'                    (Default: \code{risk_model_immediate()})
+#' @param model Label for a risk model. Can be either ...
 #' @param start Starting point for the base \code{\link{optim}}-solver
 #'              (Default: \code{c(-1,1)})
 #' @param method Methods used by the base \code{\link{optim}}-solver
@@ -62,15 +61,58 @@
 #' # note that the estimators are close to the truth (.3 and .6) 
 #' @export
 fit_model2 <- function(cohort,
-                      risk_model = expard::risk_model_immediate(),
-                      start = c(-1,1),
-                      method = c("Nelder-Mead", "BFGS", "CG", "L-BFGS-B", "SANN",
+                       model = c("no_association", "current_use", "past", "withdrawal"),
+                       method = c("L-BFGS-B", "Nelder-Mead", "BFGS", "CG", "SANN",
                                  "Brent"),
-                      control = list()) {
+                       control = list()) {
   
   # check correctness input 
   cohort <- expard::check_cohort(cohort) 
+ 
+  if (model[1] == "no_association") { 
+    # create 2x2 tables 
+    table <- expard::create2x2table(cohort, method = "time-point")
+    
+    est <- list(pi = (table$a + table$b) / table$n)
+    loglikelihood <- -1*(table$a + table$b) * log(est$pi) - (table$c + table$d) * log(1 - est$pi)
+    converged <- TRUE
+  }
+  
+  if (model[1] == "current_use") {
+    # create 2x2 tables 
+    table <- expard::create2x2table(cohort, method = "time-point")
+    
+    est <- list(
+        pi0 = table$b / (table$b + table$d),
+        pi1 = table$a / (table$a + table$c)
+      ) 
+    loglikelihood <- -1*(table$a)*log(est$pi1) - (table$c)*log(1 - est$pi1) - -1*table$b*log(est$pi0) - (table$d)*log(1 - est$pi0)
+    converged <- TRUE
+  }
+  
+  if (model[1] == "past") { 
+    k <- control$k 
+    
+    for(i in 1:cohort$n_patients) { 
+      # go over all time-points
+      for (t in 1:cohort$simulation_time) { 
+        
+      }
+    }
+  }
 
+  fit <- list(
+    est = est, 
+    n_param = length(est),
+    loglikelihood = loglikelihood, 
+    n_patients = cohort$n_patients, 
+    simulation_time = cohort$simulation_time,
+    converged = converged,
+    control = control
+  )
+  class(fit) <- "expardfit"
+  return(fit)
+  
   # 'convert' the drug prescriptions. They reflect which period is considered
   # to have an increased risk
   risks <- matrix(0, nrow = cohort$n_patients, ncol = cohort$simulation_time) 
@@ -112,19 +154,23 @@ fit_model2 <- function(cohort,
 
 #' Print function for the hccd fit_model
 #' @export
-print.expardfit2 <- function(fit) { 
-  cat("expard model fit \n\n")
-  cat(sprintf("\t-- no. of patients   : %d\n", fit$n_patients))
-  cat(sprintf("\t-- no. of time points: %d\n\n", fit$simulation_time))
+print.expardfit <- function(fit) { 
+  cat("expard model fit\n")
+  cat("----------------\n\n")
+  cat(sprintf("no. of patients    : %d\n", fit$n_patients))
+  cat(sprintf("no. of time points : %d\n\n", fit$simulation_time))
   
-  if (fit$convergence == 0) {
+  if (fit$converged) {
     cat(green(sprintf("\u2713 CONVERGED\n\n")))
   } else { 
     cat(red(sprintf("\u2717 DID NOT CONVERGE\n\n"))) 
   }
   
-  cat(sprintf("Probability of the ADR occurring with\n"))
-  cat(sprintf("minimal risk: %.4f\t and \tmaximal risk: %.4f\n", 
-              fit$prob_no_adr_with_drug, 
-              fit$prob_adr_with_drug))
+  cat(sprintf("negative log-likelihood : %g\n", fit$loglikelihood))
+  cat(sprintf("no. of parameters       : %d\n\n", fit$n_param))
+  
+  cat("estimates:\n\n")
+  for (i in 1:fit$n_param) { 
+     cat(sprintf("\t-- %s : %g\n", names(fit$est)[i], fit$est[i]))
+  }
 }

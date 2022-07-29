@@ -6,24 +6,22 @@
 \usage{
 fit_model2(
   cohort,
-  risk_model = expard::risk_model_immediate(),
-  start = c(-1, 1),
-  method = c("Nelder-Mead", "BFGS", "CG", "L-BFGS-B", "SANN", "Brent"),
+  model = c("no_association", "current_use", "past", "withdrawal"),
+  method = c("L-BFGS-B", "Nelder-Mead", "BFGS", "CG", "SANN", "Brent"),
   control = list()
 )
 }
 \arguments{
 \item{cohort}{A cohort dataset. See details below.}
 
-\item{risk_model}{A risk model function
-(Default: \code{risk_model_immediate()})}
-
-\item{start}{Starting point for the base \code{\link{optim}}-solver
-(Default: \code{c(-1,1)})}
+\item{model}{Label for a risk model. Can be either ...}
 
 \item{method}{Methods used by the base \code{\link{optim}}-solver}
 
 \item{control}{List used by the base \code{\link{optim}}-solver}
+
+\item{start}{Starting point for the base \code{\link{optim}}-solver
+(Default: \code{c(-1,1)})}
 }
 \value{
 A model fit. A list with the items
@@ -52,7 +50,7 @@ require the estimation of more parameters which is currently
 not supported.
 }
 
-\section{Cohort data oject}{
+\section{Cohort data object}{
 
 Minimal requirement is that the cohort is a list with
 two matrix with the items

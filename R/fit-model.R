@@ -106,13 +106,13 @@ fit_model <- function(cohort,
     prob_adr_with_drug = exp(beta0 + beta) / (1 + exp(beta0 + beta)),
     convergence = res$convergence
   )
-  class(fit) <- "expardfit"
+  class(fit) <- "expardfit3"
   return(fit)
 }
 
 #' Print function for the hccd fit_model
 #' @export
-print.expardfit <- function(fit) { 
+print.expardfit3 <- function(fit) { 
   cat("expard model fit \n\n")
   cat(sprintf("\t-- no. of patients   : %d\n", fit$n_patients))
   cat(sprintf("\t-- no. of time points: %d\n\n", fit$simulation_time))
