@@ -42,18 +42,12 @@ generate_adr_history <- function(drug_history,
                                  risk_model, 
                                  min_chance,
                                  max_chance, 
-                                 patient_profile, ...) { 
+                                 ...) { 
   
   simulation_time <- length(drug_history)
+
+  prob <- min_chance + (max_chance - min_chance) * risk_model(drug_history, min_chance, max_chance)
   
-  # initialize
-  adr_history <- rep(0, simulation_time)
-  
-  for (t in 1:simulation_time) { 
-    prob <- min_chance(patient_profile) + 
-      (max_chance(patient_profile) - min_chance(patient_profile)) * risk_model(drug_history[1:t], ...)
-    adr_history[t] <- rbinom(1,1,prob)
-  }
-  
+  adr_history <- sapply(prob, function(p) rbinom(1,1,p))
   return(adr_history)
 }

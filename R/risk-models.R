@@ -29,7 +29,7 @@
 #' @export
 risk_model_no_association <- function() { 
   function(drug_history, ...) { 
-    0 # always lowest risk
+    rep(0, length(drug_history))
   }
 }
 
@@ -53,11 +53,7 @@ risk_model_no_association <- function() {
 #' @export
 risk_model_current_use <- function() {
   function(drug_history, ...) { 
-    if (drug_history[length(drug_history)]) { 
-      1  # highest risk
-    } else {
-      0  # lowest risk
-    }
+    return(drug_history)
   }
 }
 
@@ -95,6 +91,7 @@ risk_model_withdrawal <- function(rate) {
   }
   
   function(drug_history, ...) { 
+    
     # if case the drug was never prescribed or the drug is 
     # currently prescribed 
     if (!any(as.logical(drug_history)) | drug_history[length(drug_history)] == 1) { 

@@ -4,20 +4,10 @@
 \alias{generate_drug_history}
 \title{Generate Drug Prescription History}
 \usage{
-generate_drug_history(
-  simulation_time = 10,
-  drug_model,
-  min_chance,
-  max_chance,
-  patient_profile,
-  ...
-)
+generate_drug_history(simulation_time = 10, min_chance, max_chance, ...)
 }
 \arguments{
 \item{simulation_time}{Total number of time points}
-
-\item{drug_model}{A drug model function,
-e.g., \code{\link{drug_model_markov_chain}}}
 
 \item{min_chance}{The probability of the drug being prescribed
 when the drug history and the ADR history have no effect}
@@ -25,6 +15,9 @@ when the drug history and the ADR history have no effect}
 \item{max_chance}{The probability of the ADR when
 the drug history and the ADR history have the highest
 possible effect}
+
+\item{drug_model}{A drug model function,
+e.g., \code{\link{drug_model_markov_chain}}}
 }
 \value{
 \code{1} or \code{0}

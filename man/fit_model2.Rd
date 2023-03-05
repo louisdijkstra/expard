@@ -8,7 +8,7 @@ fit_model2(
   cohort,
   model = c("no_association", "current_use", "past", "withdrawal"),
   method = c("L-BFGS-B", "Nelder-Mead", "BFGS", "CG", "SANN", "Brent"),
-  control = list()
+  parameters = list()
 )
 }
 \arguments{
@@ -18,10 +18,10 @@ fit_model2(
 
 \item{method}{Methods used by the base \code{\link{optim}}-solver}
 
-\item{control}{List used by the base \code{\link{optim}}-solver}
-
 \item{start}{Starting point for the base \code{\link{optim}}-solver
 (Default: \code{c(-1,1)})}
+
+\item{control}{List used by the base \code{\link{optim}}-solver}
 }
 \value{
 A model fit. A list with the items
