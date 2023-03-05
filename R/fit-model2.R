@@ -64,7 +64,7 @@ fit_model2 <- function(cohort,
                        model = c("no_association", "current_use", "past", "withdrawal"),
                        method = c("L-BFGS-B", "Nelder-Mead", "BFGS", "CG", "SANN",
                                  "Brent"),
-                       control = list()) {
+                       parameters = list()) {
   
   # check correctness input 
   cohort <- expard::check_cohort(cohort) 
@@ -86,19 +86,58 @@ fit_model2 <- function(cohort,
         pi0 = table$b / (table$b + table$d),
         pi1 = table$a / (table$a + table$c)
       ) 
-    loglikelihood <- -1*(table$a)*log(est$pi1) - (table$c)*log(1 - est$pi1) - -1*table$b*log(est$pi0) - (table$d)*log(1 - est$pi0)
+    loglikelihood <- -1*(table$a)*log(est$pi1) - (table$c)*log(1 - est$pi1) - table$b*log(est$pi0) - (table$d)*log(1 - est$pi0)
     converged <- TRUE
   }
   
   if (model[1] == "past") { 
-    k <- control$k 
+    
+    # number of time points in the past
+    k <- parameters$k 
+    
+    if (k >= cohort$simulation_time) { 
+      stop(sprintf("past risk model - number of time points in the past k = %d is larger than the simulation time T = %d", k, simulation_time)) 
+    }
+    
+    # number of times the ADR does or does not happen
+    # while being at full risk or not
+    adr_while_at_risk        <- 0 
+    no_adr_while_at_risk     <- 0 
+    adr_while_not_at_risk    <- 0 
+    no_adr_while_not_at_risk <- 0 
     
     for(i in 1:cohort$n_patients) { 
       # go over all time-points
-      for (t in 1:cohort$simulation_time) { 
+      for (t in (k+1):cohort$simulation_time) { 
+        
+        # if ADR happens at time point t for patient k
+        if (cohort$adr_history[i,t]) { 
+          if (any(cohort$drug_history[i, 1:t] == 1)) # took drug in the last k time points
+            adr_while_at_risk <- adr_while_at_risk + 1
+          else { 
+            adr_while_not_at_risk <- adr_while_not_at_risk + 1
+          }
+        } else { # ADR did not occur
+          if (any(cohort$drug_history[i, 1:t] == 1)) # took drug in the last k time points
+            no_adr_while_at_risk <- no_adr_while_at_risk + 1
+          else { 
+            no_adr_while_not_at_risk <- no_adr_while_not_at_risk + 1
+          }
+        }
         
       }
     }
+
+    est <- list(
+      pi0 = adr_while_not_at_risk / (adr_while_not_at_risk + no_adr_while_not_at_risk),
+      pi1 = adr_while_at_risk / (adr_while_at_risk + no_adr_while_at_risk)
+    ) 
+    
+    loglikelihood <- -1*adr_while_at_risk*log(est$pi1) - 
+                      no_adr_while_at_risk*log(1 - est$pi1) - 
+                      adr_while_not_at_risk*log(est$pi0) - 
+                      no_adr_while_not_at_risk*log(1 - est$pi0)
+    converged <- TRUE
   }
 
   fit <- list(
@@ -108,7 +147,7 @@ fit_model2 <- function(cohort,
     n_patients = cohort$n_patients, 
     simulation_time = cohort$simulation_time,
     converged = converged,
-    control = control
+    parameters = parameters
   )
   class(fit) <- "expardfit"
   return(fit)
