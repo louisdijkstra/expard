@@ -7,8 +7,8 @@
 generate_cohort(
   n_patients = 100,
   simulation_time = 30,
+  n_drug_adr_pairs = 100,
   risk_model = risk_model_current_use(),
-  drug_model = drug_model_markov_chain(),
   prob_exposure = probability_model_constant(1),
   min_chance_drug = probability_model_constant(0.01),
   max_chance_drug = probability_model_constant(0.5),
@@ -24,8 +24,6 @@ generate_cohort(
 \item{simulation_time}{The total number of time steps}
 
 \item{risk_model}{One of the risk models}
-
-\item{drug_model}{One of the drug models}
 
 \item{prob_exposure}{The probability that a patient
 is exposed to a drug}

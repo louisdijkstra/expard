@@ -57,8 +57,8 @@
 #' @export
 generate_cohort <- function(n_patients = 100, 
                             simulation_time = 30, 
+                            n_drug_adr_pairs = 100, 
                             risk_model      = risk_model_current_use(), 
-                            drug_model      = drug_model_markov_chain(),
                             prob_exposure   = probability_model_constant(1), 
                             min_chance_drug = probability_model_constant(.01),
                             max_chance_drug = probability_model_constant(.5),

@@ -9,6 +9,17 @@
 # 1. Zero is minimal risk, 1 is full risk. 
 ##############################################
 
+# 
+risk_models <- c('no-association', 
+                 'current-use', 
+                 'past-use', 
+                 'withdrawal', 
+                 'delayed',
+                 'decaying', 
+                 'delayed+decaying', 
+                 'long-term')
+
+
 #' Risk Model 'No Association'
 #' 
 #' A risk model reflects how the probability of 
@@ -380,7 +391,7 @@ risk_model_delayed_decaying <- function(mu, sigma, rate) {
 #' risk_model <- risk_model_long_time_after(rate = .5, delay = 9) 
 #' risk_model(drug_history) 
 #' @export
-risk_model_long_time_after <- function(rate, delay) {
+risk_model_long_term <- function(rate, delay) {
   function(drug_history, ...) { 
     
     simulation_time <- length(drug_history)

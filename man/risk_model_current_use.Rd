@@ -29,7 +29,7 @@ Other Risk models:
 \code{\link{risk_model_decaying}()},
 \code{\link{risk_model_delayed}()},
 \code{\link{risk_model_duration}()},
-\code{\link{risk_model_long_time_after}()},
+\code{\link{risk_model_long_term}()},
 \code{\link{risk_model_no_association}()},
 \code{\link{risk_model_past}()},
 \code{\link{risk_model_withdrawal}()}
