@@ -57,53 +57,6 @@ risk_model_current_use <- function() {
   }
 }
 
-#' Risk Model 'Withdrawal'
-#' 
-#' A risk model reflects how the probability of 
-#' suffering the ADR changes with the drug exposures
-#' of a patient. It returns \code{0} when the drug 
-#' prescription history has no effect, and \code{1} 
-#' when the patient is at maximal risk.
-#' In this case, once the patient is no longer exposed
-#' to the drug, the probability of the ADR peaks 
-#' and then dissipates exponentially. 
-#' Let \eqn{\tau} be the number of time points since
-#' the patient was prescribed the drug last. The return
-#' value is the given by 
-#' \deqn{\exp(-\gamma \cdot (\tau - 1))} 
-#' where \eqn{\gamma} is \code{rate}.
-#' 
-#' @param rate The rate with which the risk dissipates
-#' 
-#' @return A risk model
-#' @family Risk models
-#' @examples 
-#' drug_history <- c(1, 0, 1, 0, 0)
-#' 
-#' risk_model <- risk_model_withdrawal(rate = 1.2) 
-#' risk_model(drug_history) 
-#' @export
-risk_model_withdrawal <- function(rate) {
-  
-  # check correctness input
-  if (rate <= 0) { 
-    stop("rate should be > 0") 
-  }
-  
-  function(drug_history, ...) { 
-    
-    # if case the drug was never prescribed or the drug is 
-    # currently prescribed 
-    if (!any(as.logical(drug_history)) | drug_history[length(drug_history)] == 1) { 
-      0
-    } else {
-      # determine how long ago it was prescribed 
-      time_steps_ago = length(drug_history) - max(which(drug_history == 1)) 
-      exp(-rate * (time_steps_ago - 1)) 
-    }
-  }
-}
-
 
 #' Risk Model 'Withdrawal'
 #' 
@@ -142,20 +95,259 @@ risk_model_past <- function(past) {
     
     simulation_time <- length(drug_history) 
     
-    sapply(1:simulation_time, function(i) { 
-        
+    sapply(1:simulation_time, function(t) { 
+      as.numeric( any(drug_history[max(1,t-past):t] != 0))
     })
-    m <- max(n_timepoints - past + 1, 1)
-    
-    
-    
-    if (any(as.logical(drug_history[m:n_timepoints])) == 1) { 
-      return(1) 
-    } else { 
-      return(0) 
-    }
   }
 }
+
+
+
+
+
+
+#' Risk Model 'Withdrawal'
+#' 
+#' A risk model reflects how the probability of 
+#' suffering the ADR changes with the drug exposures
+#' of a patient. It returns \code{0} when the drug 
+#' prescription history has no effect, and \code{1} 
+#' when the patient is at maximal risk.
+#' In this case, once the patient is no longer exposed
+#' to the drug, the probability of the ADR peaks 
+#' and then dissipates exponentially. 
+#' Let \eqn{\tau} be the number of time points since
+#' the patient was prescribed the drug last. The return
+#' value is the given by 
+#' \deqn{\exp(-\gamma \cdot (\tau - 1))} 
+#' where \eqn{\gamma} is \code{rate}.
+#' 
+#' @param rate The rate with which the risk dissipates
+#' 
+#' @return A risk model
+#' @family Risk models
+#' @examples 
+#' drug_history <- c(1, 0, 1, 0, 0)
+#' 
+#' risk_model <- risk_model_withdrawal(rate = 1.2) 
+#' risk_model(drug_history) 
+#' @export
+risk_model_duration <- function(duration) {
+  
+  # check correctness input
+  if (duration <= 0) { 
+    stop("past should be > 0") 
+  }
+  
+  function(drug_history, ...) { 
+    
+    simulation_time <- length(drug_history) 
+    
+    sapply(1:simulation_time, function(t) { 
+      as.numeric( sum(drug_history[1:t]) >= duration )
+    })
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+#' Risk Model 'Withdrawal'
+#' 
+#' A risk model reflects how the probability of 
+#' suffering the ADR changes with the drug exposures
+#' of a patient. It returns \code{0} when the drug 
+#' prescription history has no effect, and \code{1} 
+#' when the patient is at maximal risk.
+#' In this case, once the patient is no longer exposed
+#' to the drug, the probability of the ADR peaks 
+#' and then dissipates exponentially. 
+#' Let \eqn{\tau} be the number of time points since
+#' the patient was prescribed the drug last. The return
+#' value is the given by 
+#' \deqn{\exp(-\gamma \cdot (\tau - 1))} 
+#' where \eqn{\gamma} is \code{rate}.
+#' 
+#' @param rate The rate with which the risk dissipates
+#' 
+#' @return A risk model
+#' @family Risk models
+#' @examples 
+#' drug_history <- c(1, 0, 1, 0, 0)
+#' 
+#' risk_model <- risk_model_withdrawal(rate = 1.2) 
+#' risk_model(drug_history) 
+#' @export
+risk_model_withdrawal <- function(rate) {
+  
+  # check correctness input
+  if (rate <= 0) { 
+    stop("rate should be > 0") 
+  }
+  
+  function(drug_history, ...) { 
+    
+    simulation_time <- length(drug_history)
+    
+    # never took the drug
+    if (sum(drug_history) == 0) { 
+      return(rep(0, simulation_time))
+    }
+    
+    
+    sapply(1:simulation_time, function(t) { 
+      # currently exposed or did not take the drug yet
+      if (drug_history[t] == 1 || sum(drug_history[1:t]) == 0) { 
+        return(0)  
+      } else {
+        time_steps_ago = t - max(which(drug_history[1:t] == 1))
+        return(exp(-rate * (time_steps_ago - 1))) 
+      }
+    })
+  }
+}
+
+
+
+
+
+#' Risk Model 'Delayed'
+#' 
+#' @param rate The rate with which the risk dissipates
+#' 
+#' @return A risk model
+#' @family Risk models
+#' @examples 
+#' drug_history <- c(1, 0, 1, 0, 0)
+#' 
+#' risk_model <- risk_model_withdrawal(rate = 1.2) 
+#' risk_model(drug_history) 
+#' @export
+risk_model_delayed <- function(mu, sigma) {
+  
+  # check correctness input
+  if (mu <= 0) { 
+    stop("mu should be > 0") 
+  }
+  
+  if (sigma <= 0) { 
+    stop("sigma should be > 0") 
+  }
+  
+  # to make sure that the highest value is indeed 1
+  normalizing_factor <- dnorm(mu, mu, sigma)
+  
+  function(drug_history, ...) { 
+    
+    simulation_time <- length(drug_history)
+    
+    # never took the drug
+    if (sum(drug_history) == 0) { 
+      return(rep(0, simulation_time))
+    }
+    
+    
+    sapply(1:simulation_time, function(t) { 
+      # currently exposed or did not take the drug yet
+      if (sum(drug_history[1:t]) == 0) { 
+        return(0)  
+      } else {
+        time_steps_ago = t - min(which(drug_history[1:t] == 1))
+        return(dnorm(time_steps_ago, mu, sigma) / normalizing_factor) 
+      }
+    })
+  }
+}
+
+
+
+
+
+
+
+
+
+#' Risk Model 'Decaying'
+#' 
+#' @param rate The rate with which the risk dissipates
+#' 
+#' @return A risk model
+#' @family Risk models
+#' @examples 
+#' drug_history <- c(1, 0, 1, 0, 0)
+#' 
+#' risk_model <- risk_model_withdrawal(rate = 1.2) 
+#' risk_model(drug_history) 
+#' @export
+risk_model_decaying <- function(rate) {
+  
+  # check correctness input
+  if (rate <= 0) { 
+    stop("rate should be > 0") 
+  }
+  
+  #normalizing_factor <- exp(-rate * (time_steps_ago - 1))
+  
+  function(drug_history, ...) { 
+    
+    simulation_time <- length(drug_history)
+    
+    # never took the drug
+    if (sum(drug_history) == 0) { 
+      return(rep(0, simulation_time))
+    }
+    
+    
+    sapply(1:simulation_time, function(t) { 
+      # did not take the drug yet
+      if (sum(drug_history[1:t]) == 0) { 
+        return(0)  
+      } else {
+        time_steps_ago = t - min(which(drug_history[1:t] == 1))
+        return(exp(-rate * time_steps_ago)) 
+      }
+    })
+  }
+}
+
+
+
+
+risk_model_delayed_decaying <- function(mu, sigma, rate) {
+  
+  # check correctness input
+  if (rate <= 0) { 
+    stop("rate should be > 0") 
+  }
+  
+  if (mu <= 0) { 
+    stop("mu should be > 0")  
+  } 
+  
+  if (sigma <= 0) { 
+    stop("sigma should be > 0")
+  }
+  
+  delay <- risk_model_delayed(mu, sigma)
+  decay <- risk_model_decaying(rate)
+  
+  #normalizing_factor <- exp(-rate * (time_steps_ago - 1))
+  
+  function(drug_history, ...) { 
+    combination <- delay(drug_history) + decay(drug_history)
+    combination / max(combination)
+  }
+}
+
+
+
 
 
 #' Risk Model 'Long Time After'
@@ -191,78 +383,20 @@ risk_model_past <- function(past) {
 risk_model_long_time_after <- function(rate, delay) {
   function(drug_history, ...) { 
     
-    # if case the drug was never prescribed or the drug is 
-    # currently prescribed 
-    if (!any(as.logical(drug_history))) { 
-      0
-    } else { 
-      # moment of first prescription
-      time_since_first_prescription = length(drug_history) - min(which(drug_history == 1)) 
+    simulation_time <- length(drug_history)
     
-      # use a sigmoid function to determine the effect
-      1 / (1 + exp(-rate * (time_since_first_prescription - delay)))
-    }
-  }
-}
-
-#' Risk Model 'Increase/Decrease'
-#' 
-#' A risk model reflects how the probability of 
-#' suffering the ADR changes with the drug exposures
-#' of a patient. It returns \code{0} when the drug 
-#' prescription history has no effect, and \code{1} 
-#' when the patient is at maximal risk. 
-#' In this case, the risk first increases linearly and 
-#' reaches its peak after \code{peak} time points. Then 
-#' it goes down at the same rate before it hits zero again. 
-#' 
-#' @param peak The point at which the risk peaks
-#' 
-#' @return A risk model
-#' @family Risk models
-#' @examples 
-#' drug_history <- c(1, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1)
-#' 
-#' risk_model <- risk_model_increase_decrease(peak = 3) 
-#' risk_model(drug_history) 
-#' @export
-risk_model_increase_decrease <- function(peak) { 
-  
-  if (peak < 2) { 
-    stop("peak should be at least 2") 
-  }
-  
-  function(drug_history, ...) { 
-    
-    drug_history <- c(0, drug_history)
-    
-    if (sum(drug_history) > 0) { # prescribed at least once
+    # moment of first prescription
+    sapply(1:simulation_time, function(t) {
+      # if case the drug was never prescribed 
+      if (sum(drug_history[1:t]) == 0) {
+        return(0)
+      } else {
+        # moment of first prescription
+        time_since_first_prescription = t - min(which(drug_history[1:t] == 1))
       
-      # time point when the drug was prescribed last
-      time_last_prescription <- rev(which(drug_history == 1))[1]
-      # how long ago the last prescription lasted
-      time_since_last_prescription <- length(drug_history) - time_last_prescription
-
-      duration <- match(0, rev(drug_history[1:time_last_prescription])) - 1
-      
-      # whether the drug is currently prescribed or not
-      currently_prescribed <- drug_history[length(drug_history)]
-      
-      if (currently_prescribed) { 
-        if (duration <= peak) { # before/at the point where the risk peaks
-          (duration-1) / (peak-1)
-        } else { 
-          max(0, 1 - (duration - peak) / (peak - 1))
-        }
-      } else { # not currently prescribed 
-        if (duration > peak) { 
-          max(0, 1 - (duration + time_since_last_prescription - peak)/(peak-1))   
-        } else { 
-        max(0, (duration-1)/(peak-1) - (time_since_last_prescription)/(peak-1))
-        }
+        # use a sigmoid function to determine the effect
+        return(1 / (1 + exp(-rate * (time_since_first_prescription - delay))))
       }
-    } else { # not prescribed 
-      0
-    }
+    })
   }
 }

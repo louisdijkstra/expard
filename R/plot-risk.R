@@ -42,8 +42,7 @@ plot_risk <- function(drug_history = c(rep(0, 4), rep(1, 6), rep(0, 10)),
   
   # determine the risks given the drug prescription history 
   # and the risk model given by risk_model
-  risks <- sapply(1:length(drug_history), function(i)
-    risk_model(drug_history[1:i]))
+  risks <- risk_model(drug_history)
   
   # create a dataset with the time points, the drug prescriptions 
   # and the risks
