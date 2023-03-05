@@ -4,7 +4,14 @@
 \alias{generate_drug_history}
 \title{Generate Drug Prescription History}
 \usage{
-generate_drug_history(simulation_time = 10, min_chance, max_chance, ...)
+generate_drug_history(
+  simulation_time = 10,
+  min_chance,
+  avg_duration = 5,
+  max_chance = NULL,
+  guaranteed_exposed = TRUE,
+  ...
+)
 }
 \arguments{
 \item{simulation_time}{Total number of time points}
@@ -12,12 +19,15 @@ generate_drug_history(simulation_time = 10, min_chance, max_chance, ...)
 \item{min_chance}{The probability of the drug being prescribed
 when the drug history and the ADR history have no effect}
 
+\item{avg_duration}{Average number of time points a patient is exposed
+once exposed to the drug (Determines \code{max_chance})}
+
 \item{max_chance}{The probability of the ADR when
 the drug history and the ADR history have the highest
-possible effect}
+possible effect (Default: \code{NULL})}
 
-\item{drug_model}{A drug model function,
-e.g., \code{\link{drug_model_markov_chain}}}
+\item{guaranteed_exposed}{If \code{TRUE}, the patient is exposed to the drug
+at least once}
 }
 \value{
 \code{1} or \code{0}
@@ -29,23 +39,10 @@ The probability depends on the drug prescriptions,
 the ADR history and the \code{drug_model}.
 }
 \examples{
-# choose the drug prescription model
-drug_model <- drug_model_markov_chain()
-
-# choose probability models. Note that the probabilities change
-# with sex
-min_chance <- probability_model_sex(prob_male = .1, prob_female = .05)
-max_chance <- probability_model_sex(prob_male = .7, prob_female = .8)
-
-# create a patient profile: 
-patient_model <- patient_model_sex(prob_male = 0.5) 
-(patient_profile <- patient_model()) 
-
 generate_drug_history(simulation_time = 10, 
-                      drug_model, 
-                      min_chance,
-                      max_chance,
-                      patient_profile)
+                      min_chance = .1,
+                      avg_duration = 5
+                      guaranteed_exposed = TRUE)
 }
 \seealso{
 Other Update functions: 

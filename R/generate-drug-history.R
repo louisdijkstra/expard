@@ -31,6 +31,10 @@ generate_drug_history <- function(simulation_time = 10,
                                   guaranteed_exposed = TRUE,
                                   ...) { 
   
+  if (avg_duration < 1) { 
+    stop("avg duration must be at least 1")  
+  }
+  
   if (is.null(max_chance)) { 
     max_chance = (avg_duration - 1) / avg_duration 
   }

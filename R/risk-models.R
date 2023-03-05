@@ -133,7 +133,6 @@ risk_model_withdrawal <- function(rate) {
 #' @export
 risk_model_past <- function(past) {
   
-  
   # check correctness input
   if (past <= 0) { 
     stop("past should be > 0") 
@@ -141,8 +140,14 @@ risk_model_past <- function(past) {
   
   function(drug_history, ...) { 
     
-    n_timepoints <- length(drug_history) 
+    simulation_time <- length(drug_history) 
+    
+    sapply(1:simulation_time, function(i) { 
+        
+    })
     m <- max(n_timepoints - past + 1, 1)
+    
+    
     
     if (any(as.logical(drug_history[m:n_timepoints])) == 1) { 
       return(1) 
