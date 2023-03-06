@@ -10,7 +10,8 @@ Depends:
 	  R (>= 3.4.3),
 	  ggplot2,
 	  crayon,
-	  dplyr
+	  dplyr, 
+	  Matrix
 License: GPL-3
 Encoding: UTF-8
 LazyData: true

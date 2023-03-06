@@ -56,59 +56,79 @@
 #'                verbose = TRUE) 
 #' @export
 generate_cohort <- function(n_patients = 100, 
-                            simulation_time = 30, 
-                            n_drug_adr_pairs = 100, 
-                            risk_model      = risk_model_current_use(), 
-                            prob_exposure   = probability_model_constant(1), 
-                            min_chance_drug = probability_model_constant(.01),
-                            max_chance_drug = probability_model_constant(.5),
-                            min_chance_adr  = probability_model_constant(.001), 
-                            max_chance_adr  = probability_model_constant(.2), 
-                            patient_model   = patient_model_uninformative(),
+                            simulation_time = 100, 
+                            n_drug_ADR_pairs = 50, 
+                            risk_model = rep("risk_model_current_use()", n_drug_ADR_pairs), 
+                            min_chance_drug = rep(.1, n_drug_ADR_pairs), 
+                            avg_duration = rep(5, n_drug_ADR_pairs), 
+                            max_chance_drug = rep(NULL, n_drug_ADR_pairs),
+                            prob_guaranteed_exposed = rep(1, n_drug_ADR_pairs), 
+                            min_chance  = rep(.1, n_drug_ADR_pairs), 
+                            max_chance  = rep(.4, n_drug_ADR_pairs),
                             verbose = FALSE) { 
   
-  # initial data 
-  drug_history <- matrix(rep(NA, n_patients * simulation_time), nrow = n_patients)
-  adr_history <- drug_history
-  patient_profiles <- vector(mode = "list", length = n_patients) # list
   
   if (verbose) { 
+    cat("Generating the patients...\n")
     pb <- txtProgressBar(min = 0, max = n_patients, style = 3)
   }
   
   # generate patients 
-  for (i in 1:n_patients) { 
-    patient_profile <- patient_model() # generate the profile of the patient, e.g., sex, age
-    patient <- generate_patient(simulation_time = simulation_time, 
-                                risk_model, 
-                                drug_model, 
-                                prob_exposure,
-                                min_chance_drug, 
-                                max_chance_drug,
-                                min_chance_adr, 
-                                max_chance_adr, 
-                                patient_profile = patient_profile) 
+  patients <- lapply(1:n_patients, function(i) { 
     
-    drug_history[i, ] <- patient$drug_history 
-    adr_history[i, ] <- patient$adr_history
-    patient_profiles[[i]] <- patient_profile
+    guaranteed_exp <- rbinom(n_drug_ADR_pairs, 1, prob_guaranteed_exposed) 
     
-    if (verbose & i %% 100 == 0) { 
+    patient <- generate_patient(
+      simulation_time,
+      n_drug_ADR_pairs,
+      risk_model,
+      min_chance_drug,
+      avg_duration,
+      max_chance_drug,
+      guaranteed_exposed = guaranteed_exp,
+      min_chance,
+      max_chance
+    )
+    
+    if (verbose) { 
       setTxtProgressBar(pb, i)
     }
-  }
+    return(patient)
+  })
   
   if (verbose) { 
     close(pb) 
+    cat("DONE generating the patients...\n\nOrganizing the data into matrices...\n")
+    pb <- txtProgressBar(min = 0, max = n_drug_ADR_pairs, style = 3)
   }
   
-  res <- list(
-    n_patients = n_patients, 
-    simulation_time = simulation_time,  
-    drug_history = drug_history,
-    adr_history = adr_history,
-    patient_profiles = patient_profiles
-  )
+  res <- lapply(1:n_drug_ADR_pairs, function(i) {
+    drug_history <- matrix(rep(NA, simulation_time * n_patients), nrow = n_patients) 
+    adr_history <- drug_history
+    
+    sapply(1:n_patients, function(p) {
+      #print(patients[[p]][[i]])
+      drug_history[p, ] <<- patients[[p]][[i]]$drug_history
+      adr_history[p, ] <<- patients[[p]][[i]]$adr_history
+    })
+
+    if (verbose) { 
+      setTxtProgressBar(pb, i)
+    }
+    
+    list(drug_history = Matrix(drug_history, sparse = TRUE), 
+         adr_history = Matrix(adr_history, sparse = TRUE))
+  })
+
+  if (verbose) { 
+    close(pb) 
+    cat("DONE organizing the data into matrices...\n")
+  }
+  
+  res$n_patients <- n_patients
+  res$n_drug_ADR_pairs <- n_drug_ADR_pairs
+  res$simulation_time <- simulation_time
+  
   class(res) <- "cohort"
   return(res)
 }
@@ -116,27 +136,9 @@ generate_cohort <- function(n_patients = 100,
 #' Print function for \code{\link{generate_cohort}}
 #' @export
 print.cohort <- function(cohort) { 
-  cat(sprintf("No. patients: %d     No. of time points: %d\n\n", 
-              cohort$n_patients,
-              cohort$simulation_time))
   
-  for (i in 1:cohort$n_patients) { 
-    cat(sprintf("patient %d   drugs: ", i)) 
-    for(t in 1:cohort$simulation_time) {
-      if (cohort$drug_history[i, t] == 1) {
-        cat(green(1))
-      } else {
-        cat(blue("."))
-      }
-    }
-    cat(sprintf("\npatient %d   ADR:   ", i))
-    for(t in 1:cohort$simulation_time) { 
-        if (cohort$adr_history[i, t] == 1) {
-          cat(red(1))
-        } else {
-          cat(blue("."))
-        }
-    }
-    cat(sprintf("\n\n")) 
-  }
+  cat("Cohort\n\n")
+  cat(sprintf("  No. patients:\t\t%d\n", cohort$n_patients))
+  cat(sprintf("  No. drug-ADR-pairs:\t%d\n", cohort$n_drug_ADR_pairs))
+  cat(sprintf("  No. time points:\t%d\n", cohort$simulation_time))
 }

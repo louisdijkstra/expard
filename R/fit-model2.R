@@ -61,7 +61,14 @@
 #' # note that the estimators are close to the truth (.3 and .6) 
 #' @export
 fit_model2 <- function(cohort,
-                       model = c("no_association", "current_use", "past", "withdrawal"),
+                       model = c('no-association', 
+                                 'current-use', 
+                                 'past-use', 
+                                 'withdrawal', 
+                                 'delayed',
+                                 'decaying', 
+                                 'delayed+decaying', 
+                                 'long-term'),
                        method = c("L-BFGS-B", "Nelder-Mead", "BFGS", "CG", "SANN",
                                  "Brent"),
                        parameters = list()) {

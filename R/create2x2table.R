@@ -93,6 +93,9 @@ create2x2table <- function(cohort, method = c("time-point",
          "time-point", "drug-era", "patient")) 
   }
   
+  cohort$n_patients <- nrow(cohort$drug_history)
+  cohort$simulation_time <- ncol(cohort$drug_history)
+  
   # initialize table 
   table <- list(a = 0, b = 0, c = 0, d = 0, method = method[1])
   class(table) <- "cont_table"

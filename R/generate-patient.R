@@ -61,41 +61,28 @@
 #'                  patient_profile = patient_profile)                
 #' @export
 generate_patient <- function(simulation_time = 100, 
-                             risk_model = risk_model_current_use(), 
-                             drug_model = drug_model_markov_chain(),
-                             prob_exposure   = probability_model_constant(1),
-                             min_chance_drug = probability_model_constant(.01),
-                             max_chance_drug = probability_model_constant(.5),
-                             min_chance_adr  = probability_model_constant(.001), 
-                             max_chance_adr  = probability_model_constant(.2), 
-                             patient_profile = NULL) { 
+                             n_drug_ADR_pairs = 50, 
+                             risk_model = rep("risk_model_current_use()", n_drug_ADR_pairs), 
+                             min_chance_drug = rep(.1, n_drug_ADR_pairs), 
+                             avg_duration = rep(5, n_drug_ADR_pairs), 
+                             max_chance_drug = rep(NULL, n_drug_ADR_pairs),
+                             guaranteed_exposed = rep(TRUE, n_drug_ADR_pairs), 
+                             min_chance  = rep(.1, n_drug_ADR_pairs), 
+                             max_chance  = rep(.4, n_drug_ADR_pairs)) { 
   
-  # generate drug history
-  if (rbinom(1,1, prob_exposure(patient_profile))) { 
-    drug_history <- generate_drug_history(simulation_time = simulation_time, 
-                                          drug_model = drug_model,
-                                          min_chance = min_chance_drug, 
-                                          max_chance = max_chance_drug, 
-                                          patient_profile = patient_profile) 
-  } else { 
-    drug_history <- rep(0, simulation_time) 
-  }
+  res <- lapply(1:n_drug_ADR_pairs, function(i) { 
+    
+    generate_drug_ADR_pair(simulation_time = simulation_time, 
+                           eval( parse(text = risk_model[i]) ),
+                           min_chance_drug[i], 
+                           avg_duration[i], 
+                           max_chance_drug[i],
+                           guaranteed_exposed[i], 
+                           min_chance[i], 
+                           max_chance[i])
+    })
   
-  # generate ADR history given a risk model and the drug history                                    
-  adr_history <- generate_adr_history(drug_history = drug_history, 
-                                      risk_model = risk_model,
-                                      min_chance = min_chance_drug, 
-                                      max_chance = max_chance_drug, 
-                                      patient_profile = patient_profile)
-  
-  
-  res <- list(
-    drug_history = drug_history,
-    adr_history = adr_history,
-    simulation_time = simulation_time, 
-    patient_profile = patient_profile
-  )
-  class(res) <- "patient"
+  class(res) <- c(class(res), "patient")
   return(res)
 }
 
@@ -103,30 +90,15 @@ generate_patient <- function(simulation_time = 100,
 #' @export
 print.patient <- function(patient) { 
   cat(sprintf("Patient\n")) 
-  if (length(patient$patient_profile) != 0) {
-    for (i in 1:length(patient$patient_profile)) { 
-      cat(sprintf("\t-- %s: ", names(patient$patient_profile)[i]))
-      cat(patient$patient_profile[[i]])
-      cat(sprintf("\n"))
-    }
-  }
+  
+  simulation_time 
+  
   cat(sprintf("\nNo. of time points: %d\n\n", patient$simulation_time))
   
-  cat(sprintf("drug: "))
-  for(i in 1:patient$simulation_time) { 
-    if (patient$drug_history[i] == 1) { 
-       cat(green(1))
-    } else { 
-      cat(blue("."))
-    }
-  }
-  cat(sprintf("\nADR:  "))
-  for(i in 1:patient$simulation_time) { 
-    if (patient$adr_history[i] == 1) { 
-      cat(red(1))
-    } else { 
-      cat(blue("."))
-    }
-  }
+  lapply(1:length(patient), function(i) { 
+    cat(sprintf("Drug-ADR pair %d\n", i))
+    print(patient[[i]]) 
+  })
+  
   cat(sprintf("\n"))
 }

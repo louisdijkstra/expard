@@ -48,37 +48,35 @@ generate_drug_ADR_pair <- function(simulation_time = 100,
     drug_history = drug_history,
     adr_history = adr_history
   )
+  
+  class(res) <- c(class(res), "drug_ADR_pair")
+  
   return(res)
 }
 
 #' Function for printing a patient 
 #' @export
-print.patient <- function(patient) { 
-  cat(sprintf("Patient\n")) 
-  if (length(patient$patient_profile) != 0) {
-    for (i in 1:length(patient$patient_profile)) { 
-      cat(sprintf("\t-- %s: ", names(patient$patient_profile)[i]))
-      cat(patient$patient_profile[[i]])
-      cat(sprintf("\n"))
-    }
-  }
-  cat(sprintf("\nNo. of time points: %d\n\n", patient$simulation_time))
+print.drug_ADR_pair <- function(drug_ADR_pair) { 
+
+  simulation_time <- length(drug_ADR_pair$drug_history)
   
-  cat(sprintf("drug: "))
-  for(i in 1:patient$simulation_time) { 
-    if (patient$drug_history[i] == 1) { 
-      cat(green(1))
-    } else { 
+  cat(sprintf("Drug: "))
+  sapply(drug_ADR_pair$drug_history, function(x) { 
+    if (x == 1) { 
+      cat(green(1))  
+    } else {
       cat(blue("."))
     }
-  }
+  })
+  
   cat(sprintf("\nADR:  "))
-  for(i in 1:patient$simulation_time) { 
-    if (patient$adr_history[i] == 1) { 
-      cat(red(1))
-    } else { 
+  sapply(drug_ADR_pair$adr_history, function(y) { 
+    if (y == 1) { 
+      cat(red(1))  
+    } else {
       cat(blue("."))
     }
-  }
+  })
+  
   cat(sprintf("\n"))
 }

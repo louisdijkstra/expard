@@ -1,5 +1,5 @@
-
-(drug_history <- generate_drug_history(100, 0.1, .9))
+library(expard)
+(drug_history <- generate_drug_history(100, .1, 3))
 
 mean(sapply(1:10000, function(i) { 
     sum(generate_drug_history(1000, .00001, 5, guaranteed_exposed = T)) 
@@ -43,8 +43,22 @@ plot_risk(risk_model = risk_model_delayed(5, 1))
 
 plot_risk(risk_model = risk_model_decaying(2))
 
-plot_risk(risk_model = risk_model_long_time_after(.01, 300))
+plot_risk(risk_model = risk_model_long_term(.5, 20))
 
 plot_risk(drug_history = c(rep(0,4), rep(1,10), rep(0,10)), risk_model = risk_model_delayed_decaying(5, 2, .3))
 
 
+generate_drug_ADR_pair(risk_model = risk_model_current_use(), min_chance = 0.01, max_chance = 1)
+
+p <- generate_patient()
+
+rep(risk_model_current_use(), 5)
+
+generate_cohort()
+
+create2x2table(cohort)
+
+
+cohort <- generate_cohort(n_patients = 2, simulation_time = 10, n_drug_ADR_pairs = 4)
+
+create2x2table(co[[4]])

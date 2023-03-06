@@ -6,15 +6,15 @@
 \usage{
 generate_cohort(
   n_patients = 100,
-  simulation_time = 30,
-  n_drug_adr_pairs = 100,
-  risk_model = risk_model_current_use(),
-  prob_exposure = probability_model_constant(1),
-  min_chance_drug = probability_model_constant(0.01),
-  max_chance_drug = probability_model_constant(0.5),
-  min_chance_adr = probability_model_constant(0.001),
-  max_chance_adr = probability_model_constant(0.2),
-  patient_model = patient_model_uninformative(),
+  simulation_time = 100,
+  n_drug_ADR_pairs = 50,
+  risk_model = rep("risk_model_current_use()", n_drug_ADR_pairs),
+  min_chance_drug = rep(0.1, n_drug_ADR_pairs),
+  avg_duration = rep(5, n_drug_ADR_pairs),
+  max_chance_drug = rep(NULL, n_drug_ADR_pairs),
+  prob_guaranteed_exposed = rep(1, n_drug_ADR_pairs),
+  min_chance = rep(0.1, n_drug_ADR_pairs),
+  max_chance = rep(0.4, n_drug_ADR_pairs),
   verbose = FALSE
 )
 }
@@ -25,15 +25,18 @@ generate_cohort(
 
 \item{risk_model}{One of the risk models}
 
-\item{prob_exposure}{The probability that a patient
-is exposed to a drug}
-
 \item{min_chance_drug}{The probability of the drug being prescribed
 when the drug history and the ADR history have no effect}
 
 \item{max_chance_drug}{The probability of the ADR when
 the drug history and the ADR history have the highest
 possible effect}
+
+\item{min_chance}{The probability of the ADR when
+the drug history has no effect}
+
+\item{max_chance}{The probability of the ADR when
+the drug history has the highest possible effect}
 
 \item{verbose}{Show progress bar (Default: \code{FALSE})}
 }

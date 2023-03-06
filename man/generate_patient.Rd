@@ -6,25 +6,20 @@
 \usage{
 generate_patient(
   simulation_time = 100,
-  risk_model = risk_model_current_use(),
-  drug_model = drug_model_markov_chain(),
-  prob_exposure = probability_model_constant(1),
-  min_chance_drug = probability_model_constant(0.01),
-  max_chance_drug = probability_model_constant(0.5),
-  min_chance_adr = probability_model_constant(0.001),
-  max_chance_adr = probability_model_constant(0.2),
-  patient_profile = NULL
+  n_drug_ADR_pairs = 50,
+  risk_model = rep("risk_model_current_use()", n_drug_ADR_pairs),
+  min_chance_drug = rep(0.1, n_drug_ADR_pairs),
+  avg_duration = rep(5, n_drug_ADR_pairs),
+  max_chance_drug = rep(NULL, n_drug_ADR_pairs),
+  guaranteed_exposed = rep(TRUE, n_drug_ADR_pairs),
+  min_chance = rep(0.1, n_drug_ADR_pairs),
+  max_chance = rep(0.4, n_drug_ADR_pairs)
 )
 }
 \arguments{
 \item{simulation_time}{The total number of time steps}
 
 \item{risk_model}{One of the risk models}
-
-\item{drug_model}{One of the drug models}
-
-\item{prob_exposure}{The probability that a patient
-is exposed to a drug}
 
 \item{min_chance_drug}{The probability of the drug being prescribed
 when the drug history and the ADR history have no effect}
@@ -38,6 +33,11 @@ the drug history has no effect}
 
 \item{max_chance}{The probability of the ADR when
 the drug history has the highest possible effect}
+
+\item{drug_model}{One of the drug models}
+
+\item{prob_exposure}{The probability that a patient
+is exposed to a drug}
 
 \item{patient}{A list with the covariates of the patient (Default: \code{NULL})}
 }
