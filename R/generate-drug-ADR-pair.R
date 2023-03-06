@@ -25,7 +25,6 @@
 #'                ADR history}
 #'
 #' @seealso \code{\link{generate_cohort}}  
-#' @examples 
 #' @export
 generate_drug_ADR_pair <- function(simulation_time = 100, 
                              risk_model = risk_model_current_use(), 
