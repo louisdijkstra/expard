@@ -62,32 +62,29 @@
 #' # note that the estimators are close to the truth (.3 and .6) 
 #' @export
 fit_model <- function(cohort,
-                      risk_model = expard::risk_model_immediate(),
+                      risk_model = expard::risk_model_current_use(),
                       start = c(-1,1),
                       method = c("Nelder-Mead", "BFGS", "CG", "L-BFGS-B", "SANN",
                                  "Brent"),
                       control = list()) {
   
-  # check correctness input 
-  cohort <- expard::check_cohort(cohort) 
-
+  
+  cohort$n_patients <- nrow(cohort$drug_history)
+  cohort$simulation_time <- ncol(cohort$drug_history)
   # 'convert' the drug prescriptions. They reflect which period is considered
   # to have an increased risk
-  risks <- matrix(0, nrow = cohort$n_patients, ncol = cohort$simulation_time) 
+  risks <- matrix(0, nrow = cohort$n_patients, ncol = cohort$simulation_time)
+  
   
   # go over all patients 
   for (i in 1:cohort$n_patients) { 
     # go over all timepoints 
-    for (t in 1:cohort$simulation_time) { 
-      # determine the risk for patient i with drug history 1,2,..,t
-      risk <- risk_model(cohort$drug_history[i, 1:t])
-      risks[i,t] <- risk
-    }
+    risks[i, ] <- risk_model(cohort$drug_history[i, ])
   }
 
   # find the optimal values for beta0 and beta
   res <- optim(start,
-               loglikelihood, 
+               expard::loglikelihood, 
                risks = risks,
                adr_history = cohort$adr_history,
                method = method[1],

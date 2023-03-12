@@ -72,17 +72,24 @@ fit_model2 <- function(cohort,
                        method = c("L-BFGS-B", "Nelder-Mead", "BFGS", "CG", "SANN",
                                  "Brent"),
                        parameters = list()) {
-  
-  # check correctness input 
-  cohort <- expard::check_cohort(cohort) 
  
+  
+  
+  
   if (model[1] == "no_association") { 
     # create 2x2 tables 
-    table <- expard::create2x2table(cohort, method = "time-point")
+    tables <- expard::create2x2tables(cohort, method = "time-point")
     
-    est <- list(pi = (table$a + table$b) / table$n)
-    loglikelihood <- -1*(table$a + table$b) * log(est$pi) - (table$c + table$d) * log(1 - est$pi)
-    converged <- TRUE
+    est <- lapply(tables, function(table) { 
+      list(pi = (table$a + table$b) / table$n)
+    })
+    
+    logl <- lapply(1:length(tables), function(i) {
+      table <- tables[[i]]
+      -1*(table$a + table$b) * log(est[[i]]$pi) - (table$c + table$d) * log(1 - est[[i]]$pi)
+    })
+      
+    converged <- rep(TRUE, length(tables))
   }
   
   if (model[1] == "current_use") {
@@ -149,8 +156,8 @@ fit_model2 <- function(cohort,
 
   fit <- list(
     est = est, 
-    n_param = length(est),
-    loglikelihood = loglikelihood, 
+    n_param = length(est[[1]]),
+    loglikelihood = logl, 
     n_patients = cohort$n_patients, 
     simulation_time = cohort$simulation_time,
     converged = converged,

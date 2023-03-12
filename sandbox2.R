@@ -59,6 +59,19 @@ generate_cohort()
 create2x2table(cohort)
 
 
-cohort <- generate_cohort(n_patients = 2, simulation_time = 10, n_drug_ADR_pairs = 4)
+cohort <- generate_cohort(n_patients = 1000, risk_model = rep("risk_model_delayed(3, 1)", 4), simulation_time = 100, n_drug_ADR_pairs = 4, )
+create2x2tables(cohort)
 
-create2x2table(co[[4]])
+fit_model2(cohort)
+
+f <- fit_model(cohort[[1]], risk_model = expard::risk_model_decaying(1))
+
+res <- data.frame(mu = seq(1, 5, by = 0.1))
+
+res$logl <- sapply(res$mu, function(rate) { 
+  f <- fit_model(cohort[[1]], risk_model = expard::risk_model_delayed(rate, 1)) 
+  f$loglikelihood
+})
+
+plot(res)
+
