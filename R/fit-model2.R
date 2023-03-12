@@ -74,11 +74,13 @@ fit_model2 <- function(cohort,
                        parameters = list()) {
  
   
-  if (model[1] == "no_association") { 
+  if (model[1] == "no-association") { 
+    tables <- expard::create2x2tables(cohort, method = "time-point")
+    
     
   }
   
-  if (model[1] == "no_association") { 
+  if (model[1] == "no-association") { 
     # create 2x2 tables 
     tables <- expard::create2x2tables(cohort, method = "time-point")
     

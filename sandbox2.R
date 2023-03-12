@@ -77,3 +77,10 @@ res$logl <- sapply(res$mu, function(rate) {
 
 plot(res)
 
+
+table <- expard::create2x2table(cohort[[1]], method = "patient")
+tables <- expard::create2x2tables(cohort)
+
+f <- fit_model(cohort[[1]], risk_model = expard::risk_model_no_association())
+
+f2 <- fit_model2(cohort[[1]], model = "no-association")
