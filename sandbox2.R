@@ -84,3 +84,8 @@ tables <- expard::create2x2tables(cohort)
 f <- fit_model(cohort[[1]], risk_model = expard::risk_model_no_association())
 
 f2 <- fit_model2(cohort[[1]], model = "no-association")
+
+
+f <- fit_model(cohort[[1]], risk_model = expard::risk_model_past(4))
+
+f2 <- fit_model2(cohort[[1]], model = "past-use", parameters = list(past = 4))

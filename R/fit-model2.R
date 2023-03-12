@@ -60,7 +60,7 @@
 #' fit_model(cohort, risk_model = expard::risk_model_immediate())
 #' # note that the estimators are close to the truth (.3 and .6) 
 #' @export
-fit_model2 <- function(cohort,
+fit_model2 <- function(drug_ADR_pair,
                        model = c('no-association', 
                                  'current-use', 
                                  'past-use', 
@@ -73,48 +73,65 @@ fit_model2 <- function(cohort,
                                  "Brent"),
                        parameters = list()) {
  
+  # initialize the fit
+  fit <- list(
+    n_patients = nrow(drug_ADR_pair$drug_history), 
+    simulation_time = ncol(drug_ADR_pair$drug_history), 
+    model = model[1], 
+    est = list(), 
+    n_param = NA, 
+    parameters = parameters, 
+    loglikelihood = c(), 
+    converged = c()
+  )
   
   if (model[1] == "no-association") { 
-    tables <- expard::create2x2tables(cohort, method = "time-point")
+    table <- expard::create2x2table(drug_ADR_pair, method = "time-point")
     
+    pi <- (table$a + table$b) / table$n
     
+    fit$est <- list(pi = pi)
+    fit$n_param <- 1
+    fit$loglikelihood <- -1*((table$a + table$b) * log(pi) + (table$c + table$d) * log(1 - pi))
+    fit$converged <- TRUE
+    
+    return(fit)
   }
   
-  if (model[1] == "no-association") { 
+  
+  if (model[1] == "current-use") {
     # create 2x2 tables 
-    tables <- expard::create2x2tables(cohort, method = "time-point")
+    table <- expard::create2x2table(drug_ADR_pair, method = "time-point")
     
-    est <- lapply(tables, function(table) { 
-      list(pi = (table$a + table$b) / table$n)
-    })
+    pi1 <- table$a / (table$a + table$c) 
+    pi0 <- table$b / (table$b + table$d)
     
-    logl <- lapply(1:length(tables), function(i) {
-      table <- tables[[i]]
-      -1*(table$a + table$b) * log(est[[i]]$pi) - (table$c + table$d) * log(1 - est[[i]]$pi)
-    })
-      
-    converged <- rep(TRUE, length(tables))
+    fit$est <- list(
+      pi1 = pi1, 
+      pi0 = pi0
+    )
+    
+    fit$n_param <- 2
+    fit$loglikelihood <- -1*(table$a)*log(pi1) - (table$c)*log(1 - pi1) - table$b*log(pi0) - (table$d)*log(1 - pi0)
+    fit$converged <- TRUE
+    
+    return(fit)
   }
   
-  if (model[1] == "current_use") {
-    # create 2x2 tables 
-    table <- expard::create2x2table(cohort, method = "time-point")
-    
-    est <- list(
-        pi0 = table$b / (table$b + table$d),
-        pi1 = table$a / (table$a + table$c)
-      ) 
-    loglikelihood <- -1*(table$a)*log(est$pi1) - (table$c)*log(1 - est$pi1) - table$b*log(est$pi0) - (table$d)*log(1 - est$pi0)
-    converged <- TRUE
-  }
   
-  if (model[1] == "past") { 
+  
+  
+  if (model[1] == "past-use") { 
+    
+    if (!("past" %in% names(parameters))) { 
+      stop("past risk model - tyhe list parameters needs a specification of past")  
+    }
     
     # number of time points in the past
-    k <- parameters$k 
+    past <- parameters$past
     
-    if (k >= cohort$simulation_time) { 
-      stop(sprintf("past risk model - number of time points in the past k = %d is larger than the simulation time T = %d", k, simulation_time)) 
+    if (past >= fit$simulation_time) { 
+      stop(sprintf("past risk model - number of time points in the past %d is larger than the simulation time T = %d", past, simulation_time)) 
     }
     
     # number of times the ADR does or does not happen
@@ -124,51 +141,44 @@ fit_model2 <- function(cohort,
     adr_while_not_at_risk    <- 0 
     no_adr_while_not_at_risk <- 0 
     
-    for(i in 1:cohort$n_patients) { 
-      # go over all time-points
-      for (t in (k+1):cohort$simulation_time) { 
-        
-        # if ADR happens at time point t for patient k
-        if (cohort$adr_history[i,t]) { 
-          if (any(cohort$drug_history[i, 1:t] == 1)) # took drug in the last k time points
+    for (k in 1:fit$n_patients) { 
+      for (t in 1:fit$simulation_time) { 
+        if (any(drug_ADR_pair$drug_history[k, max(1,(t - past)):t] == 1)) {
+          # took drug is the recent past
+          if (drug_ADR_pair$adr_history[k, t] == 1) {
             adr_while_at_risk <- adr_while_at_risk + 1
-          else { 
-            adr_while_not_at_risk <- adr_while_not_at_risk + 1
-          }
-        } else { # ADR did not occur
-          if (any(cohort$drug_history[i, 1:t] == 1)) # took drug in the last k time points
+          } else {
             no_adr_while_at_risk <- no_adr_while_at_risk + 1
-          else { 
+          }
+        } else {
+          # did not take drug
+          if (drug_ADR_pair$adr_history[k, t] == 1) {
+            adr_while_not_at_risk <- adr_while_not_at_risk + 1
+          } else {
             no_adr_while_not_at_risk <- no_adr_while_not_at_risk + 1
           }
-        }
-        
-      }
+        }  
+      }  
     }
 
-    est <- list(
-      pi0 = adr_while_not_at_risk / (adr_while_not_at_risk + no_adr_while_not_at_risk),
-      pi1 = adr_while_at_risk / (adr_while_at_risk + no_adr_while_at_risk)
-    ) 
+    pi0 <- adr_while_not_at_risk / (adr_while_not_at_risk + no_adr_while_not_at_risk)
+    pi1 <- adr_while_at_risk / (adr_while_at_risk + no_adr_while_at_risk)
     
-    loglikelihood <- -1*adr_while_at_risk*log(est$pi1) - 
+    fit$est <- list(
+      pi1 = pi1, 
+      pi0 = pi0
+    )
+    
+    fit$n_param <- 3
+    fit$loglikelihood <- -1*adr_while_at_risk*log(est$pi1) - 
                       no_adr_while_at_risk*log(1 - est$pi1) - 
                       adr_while_not_at_risk*log(est$pi0) - 
                       no_adr_while_not_at_risk*log(1 - est$pi0)
-    converged <- TRUE
+    fit$converged <- TRUE
+    
+    return(fit)
   }
 
-  fit <- list(
-    est = est, 
-    n_param = length(est[[1]]),
-    loglikelihood = logl, 
-    n_patients = cohort$n_patients, 
-    simulation_time = cohort$simulation_time,
-    converged = converged,
-    parameters = parameters
-  )
-  class(fit) <- "expardfit"
-  return(fit)
   
   # 'convert' the drug prescriptions. They reflect which period is considered
   # to have an increased risk

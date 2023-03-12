@@ -96,7 +96,7 @@ fit_model <- function(cohort,
   fit <- list(
     n_patients = cohort$n_patients, 
     simulation_time = cohort$simulation_time,
-    loglikelihood = -1 * res$value,
+    loglikelihood = res$value,
     beta0 = beta0,
     beta = beta,
     prob_no_adr_with_drug = exp(beta0) / (1 + exp(beta0)),

@@ -5,7 +5,7 @@
 \title{Fit a Model to Cohort Data}
 \usage{
 fit_model2(
-  cohort,
+  drug_ADR_pair,
   model = c("no-association", "current-use", "past-use", "withdrawal", "delayed",
     "decaying", "delayed+decaying", "long-term"),
   method = c("L-BFGS-B", "Nelder-Mead", "BFGS", "CG", "SANN", "Brent"),
@@ -13,11 +13,11 @@ fit_model2(
 )
 }
 \arguments{
-\item{cohort}{A cohort dataset. See details below.}
-
 \item{model}{Label for a risk model. Can be either ...}
 
 \item{method}{Methods used by the base \code{\link{optim}}-solver}
+
+\item{cohort}{A cohort dataset. See details below.}
 
 \item{start}{Starting point for the base \code{\link{optim}}-solver
 (Default: \code{c(-1,1)})}
