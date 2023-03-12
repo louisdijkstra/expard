@@ -54,13 +54,15 @@ p <- generate_patient()
 
 rep(risk_model_current_use(), 5)
 
-generate_cohort()
+cohort <- generate_cohort()
 
 create2x2table(cohort)
 
 
-cohort <- generate_cohort(n_patients = 1000, risk_model = rep("risk_model_delayed(3, 1)", 4), simulation_time = 100, n_drug_ADR_pairs = 4, )
-create2x2tables(cohort)
+cohort <- generate_cohort(n_patients = 20, risk_model = rep("risk_model_delayed(3, 1)", 4), simulation_time = 10, n_drug_ADR_pairs = 4, )
+tables <- create2x2tables(cohort)
+
+expard::create2x2tables(cohort)
 
 fit_model2(cohort)
 

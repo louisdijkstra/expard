@@ -6,7 +6,7 @@
 \usage{
 fit_model(
   cohort,
-  risk_model = expard::risk_model_immediate(),
+  risk_model = expard::risk_model_current_use(),
   start = c(-1, 1),
   method = c("Nelder-Mead", "BFGS", "CG", "L-BFGS-B", "SANN", "Brent"),
   control = list()

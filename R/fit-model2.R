@@ -74,7 +74,9 @@ fit_model2 <- function(cohort,
                        parameters = list()) {
  
   
-  
+  if (model[1] == "no_association") { 
+    
+  }
   
   if (model[1] == "no_association") { 
     # create 2x2 tables 
