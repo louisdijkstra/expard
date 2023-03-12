@@ -84,130 +84,38 @@
 #' create2x2table(cohort, method = "drug-era")
 #' create2x2table(cohort, method = "patient")
 #' @export
-create2x2tables <- function(cohort, method = c("time-point", 
-                                              "drug-era", 
-                                              "patient")) { 
+create2x2tables <- function(cohort,
+                            method = c("time-point",
+                                       "drug-era",
+                                       "patient"),
+                            verbose = TRUE) {
+  
   
   if (!(method[1] %in% c("time-point", "drug-era", "patient"))) { 
     stop(sprintf("method should be either '%s', '%s' or '%s'", 
                  "time-point", "drug-era", "patient")) 
   }
   
-  #cohort$n_patients <- nrow(cohort$drug_history)
-  #cohort$simulation_time <- ncol(cohort$drug_history)
+  if (verbose) { 
+    cat("Generating 2x2 tables...\n")
+    pb <- txtProgressBar(min = 0, max = cohort$n_drug_ADR_pairs, style = 3) 
+  }
   
   # initialize tables
   tables <- lapply(1:cohort$n_drug_ADR_pairs, function(i) { 
-    table <- list(a = 0, b = 0, c = 0, d = 0, method = method[1])
-    class(table) <- "cont_table"
+    table <- create2x2table(cohort[[i]], method)
+    
+    if (verbose) {
+      setTxtProgressBar(pb, i)
+    }
+    
     return(table)
   })
   
-  if (method[1] == "time-point") {
-    sapply(1:cohort$n_drug_ADR_pairs, function(i) {
-      
-      drug <- cohort[[i]]$drug_history == 1
-      ADR <- cohort[[i]]$adr_history == 1
-      
-      tables[[i]]$a <<- sum(drug & ADR)
-      tables[[i]]$b <<- sum(!drug & ADR)
-      tables[[i]]$c <<- sum(drug & !ADR)
-      tables[[i]]$d <<- sum(!drug & !ADR)
-      
-    })
+  if (verbose) {
+    close(pb) 
+    cat("DONE generating tables...\n")
   }
   
-  if (method[1] == "patient") {
-    # go over all patients
-    
-    sapply(1:cohort$n_drug_ADR_pairs, function(i) {
-  
-      drug <- rowSums(cohort[[i]]$drug_history) > 0
-      ADR <- rowSums(cohort[[i]]$adr_history) > 0
-      
-      tables[[i]]$a <<- sum(drug & ADR)
-      tables[[i]]$b <<- sum(!drug & ADR)
-      tables[[i]]$c <<- sum(drug & !ADR)
-      tables[[i]]$d <<- sum(!drug & !ADR)
-    })
-  }
-  
-  if (method[1] == "drug-era") { 
-    
-    sapply(1:cohort$n_drug_ADR_pairs, function(i) {
-      sapply(1:cohort$n_patients, function(k) {
-        # first initialize some variables to keep track
-        # in which era we (drug or non-drug) and whether
-        # the ADR occured during this era
-        in_drug_era <-
-          cohort[[i]]$drug_history[k, 1] == 1  # are we currently in a drug era?
-        ADR_happened <-
-          cohort[[i]]$adr_history[k, 1] == 1    # did the ADR occur during this era?
-        
-        sapply(2:(cohort$simulation_time - 1), function(t) {
-          if (in_drug_era) {
-            # in drug-era
-            if (cohort[[i]]$drug_history[k, t]) {
-              # drug prescribed on time point t?
-              if (cohort[[i]]$adr_history[k, t]) {
-                # did the ADR occur?
-                ADR_happened <- TRUE
-              }
-            } else {
-              # switch from a drug-era to a non-drug era
-              in_drug_era <- FALSE
-              if (ADR_happened) {
-                tables[[i]]$a <<- tables[[i]]$a + 1
-              } else {
-                tables[[i]]$c <<- tables[[i]]$c + 1
-              }
-            }
-          } else {
-            # not in drug-era
-            if (cohort[[i]]$drug_history[k, t] == 0) {
-              # drug not prescribed
-              if (cohort[[i]]$adr_history[k, t] == 1) {
-                # ADR occurred
-                ADR_happened <- TRUE
-              }
-            } else {
-              # switch from a non-drug-era to a drug era
-              in_drug_era <- TRUE
-              if (ADR_happened) {
-                tables[[i]]$b <<- tables[[i]]$b + 1
-              } else {
-                tables[[i]]$d <<- tables[[i]]$d + 1
-              }
-            }
-            
-          }
-          ADR_happened <- cohort[[i]]$adr_history[k, t] == 1
-        })
-      })
-    })
-  }
-  
-  lapply(1:cohort$n_drug_ADR_pairs, function(i) { 
-    tables[[i]]$n <<- tables[[i]]$a + tables[[i]]$b + tables[[i]]$c + tables[[i]]$d 
-  })
   return(tables)
-}
-
-#' Print function for 2x2 tables
-#' @export
-print.cont_table <- function(table) { 
-  cat(sprintf("2 x 2 Contingency Table\n"))
-  cat(sprintf("\tusing method '%s'\n\n", table$method))
-  cat("         |\tADR\t|     not ADR\t| total\n")
-  cat("------------------------------------------------\n")
-  cat(sprintf("    drug |\t%d\t|\t%d\t| %d\n", table$a, table$c, table$a + table$c)) 
-  cat(sprintf("not drug |\t%d\t|\t%d\t| %d\n", table$b, table$d, table$b + table$d)) 
-  cat("------------------------------------------------\n")
-  cat(sprintf("   total |\t%d\t|\t%d\t| %d\n", table$a + table$b, 
-              table$c + table$d, 
-              table$a + table$b + table$c + table$d)) 
-  
-  if ((table$a + table$c) == (table$a + table$b + table$c + table$d)) { 
-    cat(crayon::magenta(sprintf("\nwarning: since the number of patients that were prescribed \nthe drug and the total number of patients is the same,\nit might be that the cohort was created like this on purpose"))) 
-  }
 }

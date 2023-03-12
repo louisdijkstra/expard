@@ -4,7 +4,11 @@
 \alias{create2x2tables}
 \title{Creating \eqn{2 \times 2} Tables}
 \usage{
-create2x2tables(cohort, method = c("time-point", "drug-era", "patient"))
+create2x2tables(
+  cohort,
+  method = c("time-point", "drug-era", "patient"),
+  verbose = TRUE
+)
 }
 \arguments{
 \item{cohort}{A cohort; see \code{\link{generate_cohort}}}
