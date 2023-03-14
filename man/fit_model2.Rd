@@ -5,7 +5,7 @@
 \title{Fit a Model to Cohort Data}
 \usage{
 fit_model2(
-  drug_ADR_pair,
+  pair,
   model = c("no-association", "current-use", "past-use", "withdrawal", "delayed",
     "decaying", "delayed+decaying", "long-term"),
   method = c("L-BFGS-B", "Nelder-Mead", "BFGS", "CG", "SANN", "Brent"),

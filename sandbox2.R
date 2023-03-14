@@ -64,9 +64,10 @@ tables <- create2x2tables(cohort)
 
 expard::create2x2tables(cohort)
 
-fit_model2(cohort)
+m <- fit_model2(cohort[[1]], model = 'past-use')
+m0 <- fit_model2(cohort[[1]], model = "current-use")
 
-f <- fit_model(cohort[[1]], risk_model = expard::risk_model_decaying(1))
+f <- estimate(cohort[[1]], risk_model = expard::risk_model_decaying(4))
 
 res <- data.frame(mu = seq(1, 5, by = 0.1))
 

@@ -60,7 +60,7 @@
 #' fit_model(cohort, risk_model = expard::risk_model_immediate())
 #' # note that the estimators are close to the truth (.3 and .6) 
 #' @export
-fit_model2 <- function(drug_ADR_pair,
+fit_model2 <- function(pair,
                        model = c('no-association', 
                                  'current-use', 
                                  'past-use', 
@@ -75,8 +75,8 @@ fit_model2 <- function(drug_ADR_pair,
  
   # initialize the fit --------------------------------
   fit <- list(
-    n_patients = nrow(drug_ADR_pair$drug_history), 
-    simulation_time = ncol(drug_ADR_pair$drug_history), 
+    n_patients = nrow(pair$drug_history), 
+    simulation_time = ncol(pair$drug_history), 
     model = model[1], 
     est = list(), 
     n_param = NA, 
@@ -85,13 +85,13 @@ fit_model2 <- function(drug_ADR_pair,
     converged = c()
   )
   
-  class(fit) <- c(class(fit), "expardfit")
+  class(fit) <- c(class(fit), "expardmodel")
   
   # No association model -------------------------------------------------------
   if (model[1] == "no-association") { 
     
     # determine the 2x2 table
-    table <- expard::create2x2table(drug_ADR_pair, method = "time-point")
+    table <- expard::create2x2table(pair, method = "time-point")
     
     pi <- (table$a + table$b) / table$n
     
@@ -106,7 +106,7 @@ fit_model2 <- function(drug_ADR_pair,
   
   if (model[1] == "current-use") {
     # create 2x2 tables 
-    table <- expard::create2x2table(drug_ADR_pair, method = "time-point")
+    table <- expard::create2x2table(pair, method = "time-point")
     
     pi1 <- table$a / (table$a + table$c) 
     pi0 <- table$b / (table$b + table$d)
@@ -124,6 +124,38 @@ fit_model2 <- function(drug_ADR_pair,
   }
   
   
+  
+  if (model[1] == "past-use") { 
+    past <- 1:(fit$simulation_time - 1) 
+    
+    estimates <- lapply(past, function(d) { 
+      res <- expard::estimate(pair, 
+                       risk_model = expard::risk_model_past(d))
+      res$past <- d
+      return(res)
+      })
+    
+    # select the best model
+    best <- estimates[[1]]
+    
+    lapply(estimates, function(est) { 
+        if (est$loglikelihood < best$loglikelihood) { 
+          best <<- est   
+        }
+      })
+    
+    fit$est <- list(
+      pi0 = best$prob_no_adr_with_drug, 
+      pi1 = best$prob_adr_with_drug, 
+      past = best$past
+    )
+    
+    fit$n_param <- 3
+    fit$loglikelihood <- best$loglikelihood
+    fit$converged <- best$converged
+    
+    return(fit)
+  }
   
   
   if (model[1] == "past-use") { 
@@ -226,7 +258,7 @@ fit_model2 <- function(drug_ADR_pair,
 
 #' Print function for the hccd fit_model
 #' @export
-print.expardfit <- function(fit) { 
+print.expardfit2 <- function(fit) { 
   cat("expard model fit\n")
   cat("----------------\n\n")
   cat(sprintf("no. of patients    : %d\n", fit$n_patients))

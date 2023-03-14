@@ -1,15 +1,9 @@
-#' Fit a Model to Cohort Data
+#' Estimate
 #' 
-#' \code{fit_model} fits a specified risk model \code{risk_model}
-#' to cohort data. 
+#' \code{estimate} fits a specified risk model \code{risk_model}. 
+#' The maximum likelihood is determined numerically. 
 #' 
-#' @section Patient models: 
-#' \code{fit_model} can currently only deal with the 
-#' \code{\link{patient_model_uninformative}}. More complex
-#' patient models, such as \code{\link{patient_model_sex}} 
-#' require the estimation of more parameters which is currently
-#' not supported. 
-#' @section Cohort data oject:
+#' @section Pair data oject:
 #' Minimal requirement is that the cohort is a list with 
 #' two matrix with the items
 #' \itemize{
@@ -23,9 +17,10 @@
 #' See \code{\link{check_cohort}} and \code{\link{generate_cohort}}
 #' for more details on the \code{cohort} object. 
 #' 
-#' @param cohort A cohort dataset. See details below. 
+#' @param pair The data for a single drug-ADR pair. See the \code{\link{generate_cohort}} 
+#'             function. A pair is a list of two matrices, see below
 #' @param risk_model A risk model function 
-#'                    (Default: \code{risk_model_immediate()})
+#'                    (Default: \code{risk_model_current_use()})
 #' @param start Starting point for the base \code{\link{optim}}-solver
 #'              (Default: \code{c(-1,1)})
 #' @param method Methods used by the base \code{\link{optim}}-solver
@@ -44,64 +39,55 @@
 #'       \item{\code{convergence}}{Convergence value of \code{\link{optim}}. 
 #'                \code{0} means that the algorithm converged}
 #'                          
-#' @seealso \code{\link{check_cohort}},\code{\link{generate_cohort}}
+#' @seealso \code{\link{generate_cohort}}
 #' @examples 
-#' cohort <- expard::generate_cohort(n_patients = 1000, 
-#'                                   simulation_time = 100, 
-#'                                   risk_model = expard::risk_model_immediate(), 
-#'                                   verbose = TRUE, 
-#'                                   min_chance_drug = probability_model_constant(.3), 
-#'                                   max_chance_drug = probability_model_constant(.7), 
-#'                                   min_chance_adr = probability_model_constant(.3),
-#'                                   max_chance_adr = probability_model_constant(.6))
-#' # fit the no effect model
-#' fit_model(cohort, risk_model = expard::risk_model_no_effect()) 
+#' cohort <- expard::generate_cohort()
 #' 
-#' # fit the true immediate effect model
-#' fit_model(cohort, risk_model = expard::risk_model_immediate())
-#' # note that the estimators are close to the truth (.3 and .6) 
+#' fit <- expard::estimate(cohort[[1]], risk_model = expard::risk_model_current_use())
 #' @export
-fit_model <- function(cohort,
-                      risk_model = expard::risk_model_current_use(),
-                      start = c(-1,1),
-                      method = c("Nelder-Mead", "BFGS", "CG", "L-BFGS-B", "SANN",
-                                 "Brent"),
-                      control = list()) {
+estimate <- function(pair,
+                     risk_model = expard::risk_model_current_use(),
+                     start = c(-1, 1),
+                     method = c("Nelder-Mead", "BFGS", "CG", "L-BFGS-B", "SANN",
+                                "Brent"),
+                     control = list()) {
   
   
-  cohort$n_patients <- nrow(cohort$drug_history)
-  cohort$simulation_time <- ncol(cohort$drug_history)
+  
+  
+  n_patients <- nrow(pair$drug_history)
+  simulation_time <- ncol(pair$drug_history)
+  
   # 'convert' the drug prescriptions. They reflect which period is considered
   # to have an increased risk
-  risks <- matrix(0, nrow = cohort$n_patients, ncol = cohort$simulation_time)
-  
+  risks <- matrix(0, nrow = n_patients, ncol = simulation_time)
   
   # go over all patients 
-  for (i in 1:cohort$n_patients) { 
+  for (i in 1:n_patients) { 
     # go over all timepoints 
-    risks[i, ] <- risk_model(cohort$drug_history[i, ])
+    risks[i, ] <- risk_model(pair$drug_history[i, ])
   }
 
   # find the optimal values for beta0 and beta
   res <- optim(start,
                expard::loglikelihood, 
                risks = risks,
-               adr_history = cohort$adr_history,
+               adr_history = pair$adr_history,
                method = method[1],
                control = list())
 
   beta0 <- res$par[1]
   beta <- res$par[2]
-
+  
   fit <- list(
-    n_patients = cohort$n_patients, 
-    simulation_time = cohort$simulation_time,
+    n_patients = n_patients, 
+    simulation_time = simulation_time,
     loglikelihood = res$value,
     beta0 = beta0,
     beta = beta,
     prob_no_adr_with_drug = exp(beta0) / (1 + exp(beta0)),
     prob_adr_with_drug = exp(beta0 + beta) / (1 + exp(beta0 + beta)),
-    convergence = res$convergence
+    converged = res$convergence
   )
   class(fit) <- "expardfit"
   return(fit)
@@ -114,12 +100,13 @@ print.expardfit <- function(fit) {
   cat(sprintf("\t-- no. of patients   : %d\n", fit$n_patients))
   cat(sprintf("\t-- no. of time points: %d\n\n", fit$simulation_time))
   
-  if (fit$convergence == 0) {
+  if (fit$converged == 0) {
     cat(green(sprintf("\u2713 CONVERGED\n\n")))
   } else { 
     cat(red(sprintf("\u2717 DID NOT CONVERGE\n\n"))) 
   }
   
+  cat(sprintf("Log-likelihood: %.4f\n\n", fit$loglikelihood))
   cat(sprintf("Probability of the ADR occurring with\n"))
   cat(sprintf("minimal risk: %.4f\t and \tmaximal risk: %.4f\n", 
               fit$prob_no_adr_with_drug, 
