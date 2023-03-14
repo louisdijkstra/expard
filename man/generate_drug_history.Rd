@@ -44,8 +44,4 @@ generate_drug_history(simulation_time = 10,
                       avg_duration = 5
                       guaranteed_exposed = TRUE)
 }
-\seealso{
-Other Update functions: 
-\code{\link{generate_adr_history}()}
-}
 \concept{Update functions}

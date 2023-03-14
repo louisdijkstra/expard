@@ -8,7 +8,10 @@
 #' @inheritParams generate_patient
 #' @param verbose Show progress bar (Default: \code{FALSE})
 #' 
-#' @return A \code{cohort} object; A list of 
+#' @return A \code{cohort} object; A list of length \code{n_drug_ADR_pairs}. 
+#'         Each entry contains two binary matrices; one for the drug histories
+#'         of all patients and one for the ADR histories of all patients. Each 
+#'         row is a patient
 #' 
 #' @seealso \code{\link{generate_patient}}   
 

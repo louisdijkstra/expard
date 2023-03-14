@@ -58,5 +58,5 @@ Generates a patient, which is a collection of different
 drug-ADR pairs, see function \code{\link{generate_drug_ADR_pair}}.
 }
 \seealso{
-\code{\link{generate_cohort, generate_drug_ADR_pair, generate_drug_history}}
+\code{\link{generate_cohort}}, \code{\link{generate_drug_ADR_pair}}, \code{\link{generate_drug_history}}
 }
