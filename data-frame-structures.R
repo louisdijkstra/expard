@@ -2,6 +2,8 @@ Final Data frame:
   
 drug
 ADR
+n_patients
+simulation_time
 
 true_model
 true_pi0
@@ -13,8 +15,7 @@ true_mu
 true_sigma
 
 model
-simulation_time
-n_patients
+
 n_param 
 
 pi0

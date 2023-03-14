@@ -49,6 +49,9 @@ ADR history}
 \description{
 Generates the drug- and ADR history
 }
+\examples{
+drug_ADR_pair <- expard::generate_drug_ADR_pair()
+}
 \seealso{
 \code{\link{generate_cohort}}
 }

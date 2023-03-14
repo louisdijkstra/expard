@@ -2,17 +2,17 @@
 % Please edit documentation in R/create2x2table.R
 \name{create2x2table}
 \alias{create2x2table}
-\title{Creating \eqn{2 \times 2} Tables}
+\title{Creating a \eqn{2 \times 2} Table}
 \usage{
 create2x2table(drug_ADR_pair, method = c("time-point", "drug-era", "patient"))
 }
 \arguments{
+\item{drug_ADR_pair}{A drug-ADR pair; see \code{\link{generate_cohort}}}
+
 \item{method}{Method used to construct the table; either
 \code{time-point}, \code{drug-era} and \code{patient}.
 See the description for more information (Default:
 \code{time-point})}
-
-\item{cohort}{A cohort; see \code{\link{generate_cohort}}}
 }
 \value{
 A \code{cont_table} object; a list with
@@ -23,9 +23,7 @@ depends on the \code{method} used}
 }
 \description{
 Creates a \eqn{2 \times 2} contingency table for a
-drug and ADR given a \code{cohort} object,
-see \code{\link[hccdsim]{generate_cohort}} or
-\code{\link{check_cohort}}. \cr\cr
+drug and ADR. \cr\cr
 A table is structured in the following form:
 \tabular{lcc}{
 \tab ADR \tab not ADR\cr

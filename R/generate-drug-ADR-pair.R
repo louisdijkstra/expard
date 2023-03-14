@@ -24,16 +24,19 @@
 #'       \item{\code{adr_history}}{binary vector of the 
 #'                ADR history}
 #'
-#' @seealso \code{\link{generate_cohort}}  
+#' @seealso \code{\link{generate_cohort}} 
+#' @examples 
+#' drug_ADR_pair <- expard::generate_drug_ADR_pair()
 #' @export
-generate_drug_ADR_pair <- function(simulation_time = 100, 
-                             risk_model = risk_model_current_use(), 
-                             min_chance_drug = .1, 
-                             avg_duration = 5, 
-                             max_chance_drug = NULL,
-                             guaranteed_exposed = TRUE, 
-                             min_chance  = .1, 
-                             max_chance  = .4) { 
+generate_drug_ADR_pair <- function(simulation_time = 100,
+                                   risk_model = risk_model_current_use(),
+                                   min_chance_drug = .1,
+                                   avg_duration = 5,
+                                   max_chance_drug = NULL,
+                                   guaranteed_exposed = TRUE,
+                                   min_chance  = .1,
+                                   max_chance  = .4)
+{ 
   
   
   drug_history <- generate_drug_history(simulation_time, min_chance_drug, 
@@ -53,7 +56,7 @@ generate_drug_ADR_pair <- function(simulation_time = 100,
   return(res)
 }
 
-#' Function for printing a patient 
+#' Function for printing a drug-ADR pair
 #' @export
 print.drug_ADR_pair <- function(drug_ADR_pair) { 
 

@@ -28,9 +28,12 @@ generate_cohort(
 \item{min_chance_drug}{The probability of the drug being prescribed
 when the drug history and the ADR history have no effect}
 
+\item{avg_duration}{Average number of time points a patient is exposed
+once exposed to the drug (Determines \code{max_chance})}
+
 \item{max_chance_drug}{The probability of the ADR when
 the drug history and the ADR history have the highest
-possible effect}
+possible effect (Default: \code{NULL})}
 
 \item{min_chance}{The probability of the ADR when
 the drug history has no effect}
@@ -51,46 +54,9 @@ rows and \code{simulation_time} columns}
 \item{\code{patient_profile}}{A list with the patient profiles for each patient}
 }
 \description{
-Generates a cohort of patients, each with a
-drug prescription and ADR history.
-See for more information and details \code{\link{generate_patient}}.
-}
-\examples{
-# choose a patient model (in this case based on the patients sex)
-patient_model <- patient_model_sex(prob_male = 0.5)
-(patient_profile <- patient_model())
-
-# choose a risk model (effect of the drug is immediate)
-risk_model <- risk_model_current_use()
-
-# how the drug is prescribed over time
-drug_model <- drug_model_markov_chain() 
-
-# how the occurence of an ADR affect the prescription of the drug
-adr_model = adr_model_no_effect()
-
-# minimum and maximal probabilities for the drug being prescribed
-min_chance_drug <- probability_model_sex(prob_male = .1, prob_female = .2)
-max_chance_drug <- probability_model_sex(prob_male = .5, prob_female = .53)
-
-# minimum and maximal probabilities for the ADR occurring 
-min_chance_adr <- probability_model_sex(prob_male = .01, prob_female = .05)
-max_chance_adr <- probability_model_sex(prob_male = .2, prob_female = .3)
-
-# chance that the patient is exposed to the drug
-prob_exposure <- probability_model_sex(prob_male = .9, prob_female = .7)
-
-generate_cohort(n_patients = 10, 
-               simulation_time = 20, 
-               risk_model      = risk_model, 
-               drug_model      = drug_model,
-               adr_model       = adr_model, 
-               min_chance_drug = min_chance_drug,
-               max_chance_drug = max_chance_drug,
-               min_chance_adr  = min_chance_adr, 
-               max_chance_adr  = max_chance_adr, 
-               patient_model   = patient_model,
-               verbose = TRUE) 
+Generates a cohort which is a collection of drug-ADR pair.
+It is a wrapper function for the \code{\link{generate_drug_ADR_pair}}
+function.
 }
 \seealso{
 \code{\link{generate_patient}}

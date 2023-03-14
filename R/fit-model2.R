@@ -73,7 +73,7 @@ fit_model2 <- function(drug_ADR_pair,
                                  "Brent"),
                        parameters = list()) {
  
-  # initialize the fit
+  # initialize the fit --------------------------------
   fit <- list(
     n_patients = nrow(drug_ADR_pair$drug_history), 
     simulation_time = ncol(drug_ADR_pair$drug_history), 
@@ -85,7 +85,12 @@ fit_model2 <- function(drug_ADR_pair,
     converged = c()
   )
   
+  class(fit) <- c(class(fit), "expardfit")
+  
+  # No association model -------------------------------------------------------
   if (model[1] == "no-association") { 
+    
+    # determine the 2x2 table
     table <- expard::create2x2table(drug_ADR_pair, method = "time-point")
     
     pi <- (table$a + table$b) / table$n

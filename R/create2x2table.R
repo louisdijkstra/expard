@@ -1,9 +1,7 @@
-#' Creating \eqn{2 \times 2} Tables
+#' Creating a \eqn{2 \times 2} Table
 #' 
 #' Creates a \eqn{2 \times 2} contingency table for a 
-#' drug and ADR given a \code{cohort} object, 
-#' see \code{\link[hccdsim]{generate_cohort}} or 
-#' \code{\link{check_cohort}}. \cr\cr
+#' drug and ADR. \cr\cr
 #' A table is structured in the following form:  
 #' \tabular{lcc}{
 #'    \tab ADR \tab not ADR\cr
@@ -56,7 +54,7 @@
 #' In this case, the total count \code{n} is the total number of drug- and 
 #' non-drug eras.
 #' 
-#' @param cohort A cohort; see \code{\link{generate_cohort}} 
+#' @param drug_ADR_pair A drug-ADR pair; see \code{\link{generate_cohort}} 
 #' @param method Method used to construct the table; either 
 #'               \code{time-point}, \code{drug-era} and \code{patient}. 
 #'               See the description for more information (Default: 

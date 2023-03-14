@@ -1,9 +1,10 @@
-#' Creating \eqn{2 \times 2} Tables
+#' \eqn{2 \times 2} Tables
 #' 
-#' Creates a \eqn{2 \times 2} contingency table for a 
-#' drug and ADR given a \code{cohort} object, 
-#' see \code{\link[hccdsim]{generate_cohort}} or 
-#' \code{\link{check_cohort}}. \cr\cr
+#' Creates the \eqn{2 \times 2} contingency tables for *all* 
+#' drug-ADR pairs in a specific cohort. The function is basically
+#' a wrapper for \code{\link{create2x2table}}
+#' 
+#' \cr\cr
 #' A table is structured in the following form:  
 #' \tabular{lcc}{
 #'    \tab ADR \tab not ADR\cr
@@ -62,18 +63,14 @@
 #'               See the description for more information (Default: 
 #'               \code{time-point})
 #'
-#' @return A \code{cont_table} object; a list with  
-#'     \item{\code{a},\code{b},\code{c},\code{d}}{The counts in the table}
-#'     \item{\code{method}}{Method that was used to construct the table}
-#'     \item{\code{n}}{Total count (\code{n = a + b + c + d}). The interpretation 
-#'                depends on the \code{method} used} 
+#' @return A list of \code{cont_table} objects
 #'
 #' @references 
 #' Zorych, I., Madigan, D., Ryan, P., & Bate, A. (2013). Disproportionality methods for 
 #' pharmacovigilance in longitudinal observational databases. 
 #' Statistical Methods in Medical Research, 22(1), 39–56. 
 #' https://doi.org/10.1177/0962280211403602  
-#' @seealso \code{\link{generate_cohort}}
+#' @seealso \code{\link{create2x2table}}
 #' @examples 
 #' set.seed(1)
 #' cohort <- generate_cohort(n_patients = 200) 

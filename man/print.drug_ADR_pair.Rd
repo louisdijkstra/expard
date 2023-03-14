@@ -2,10 +2,10 @@
 % Please edit documentation in R/generate-drug-ADR-pair.R
 \name{print.drug_ADR_pair}
 \alias{print.drug_ADR_pair}
-\title{Function for printing a patient}
+\title{Function for printing a drug-ADR pair}
 \usage{
 \method{print}{drug_ADR_pair}(drug_ADR_pair)
 }
 \description{
-Function for printing a patient
+Function for printing a drug-ADR pair
 }

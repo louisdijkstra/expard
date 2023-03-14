@@ -2,7 +2,7 @@
 % Please edit documentation in R/create2x2tables.R
 \name{create2x2tables}
 \alias{create2x2tables}
-\title{Creating \eqn{2 \times 2} Tables}
+\title{\eqn{2 \times 2} Tables}
 \usage{
 create2x2tables(
   cohort,
@@ -19,17 +19,15 @@ See the description for more information (Default:
 \code{time-point})}
 }
 \value{
-A \code{cont_table} object; a list with
-\item{\code{a},\code{b},\code{c},\code{d}}{The counts in the table}
-\item{\code{method}}{Method that was used to construct the table}
-\item{\code{n}}{Total count (\code{n = a + b + c + d}). The interpretation
-depends on the \code{method} used}
+A list of \code{cont_table} objects
 }
 \description{
-Creates a \eqn{2 \times 2} contingency table for a
-drug and ADR given a \code{cohort} object,
-see \code{\link[hccdsim]{generate_cohort}} or
-\code{\link{check_cohort}}. \cr\cr
+Creates the \eqn{2 \times 2} contingency tables for \emph{all}
+drug-ADR pairs in a specific cohort. The function is basically
+a wrapper for \code{\link{create2x2table}}
+}
+\details{
+\cr\cr
 A table is structured in the following form:
 \tabular{lcc}{
 \tab ADR \tab not ADR\cr
@@ -105,5 +103,5 @@ Statistical Methods in Medical Research, 22(1), 39–56.
 https://doi.org/10.1177/0962280211403602
 }
 \seealso{
-\code{\link{generate_cohort}}
+\code{\link{create2x2table}}
 }

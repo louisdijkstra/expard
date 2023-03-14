@@ -19,73 +19,44 @@ generate_patient(
 \arguments{
 \item{simulation_time}{The total number of time steps}
 
-\item{risk_model}{One of the risk models}
+\item{n_drug_ADR_pairs}{Number of drug-ADR pairs simulated}
 
-\item{min_chance_drug}{The probability of the drug being prescribed
-when the drug history and the ADR history have no effect}
+\item{risk_model}{Vector with risk models. Each risk model is given as
+a string, e.g., \code{"risk_model_current_use()"}. The
+vector must have the length \code{n_drug_ADR_pairs}#'}
+
+\item{min_chance_drug}{Vector with the probabilities of the drug being prescribed
+when the drug history and the ADR history have no effect.
+Must have a length of \code{n_drug_ADR_pairs}.}
+
+\item{avg_duration}{Average number of time points a patient is exposed
+once exposed to the drug (Determines \code{max_chance})
+Must have a length of \code{n_drug_ADR_pairs}.}
 
 \item{max_chance_drug}{The probability of the ADR when
 the drug history and the ADR history have the highest
-possible effect}
+possible effect (Default: \code{NULL})
+Must have a length of \code{n_drug_ADR_pairs}.}
+
+\item{guaranteed_exposed}{If \code{TRUE}, the patient is exposed to the drug
+at least once
+Must have a length of \code{n_drug_ADR_pairs}.}
 
 \item{min_chance}{The probability of the ADR when
-the drug history has no effect}
+the drug history has no effect
+Must have a length of \code{n_drug_ADR_pairs}.}
 
 \item{max_chance}{The probability of the ADR when
-the drug history has the highest possible effect}
-
-\item{drug_model}{One of the drug models}
-
-\item{prob_exposure}{The probability that a patient
-is exposed to a drug}
-
-\item{patient}{A list with the covariates of the patient (Default: \code{NULL})}
+the drug history has the highest possible effect
+Must have a length of \code{n_drug_ADR_pairs}.}
 }
 \value{
-A \code{patient} object; a list with
-\item{\code{drug_history}}{binary vector of the
-drug history}
-\item{\code{adr_history}}{binary vector of the
-ADR history}
-\item{\code{simulation_time}}{The total number of time steps}
-\item{\code{patient_profile}}{A list with patient characteristics}
+A list of drug-ADR pairs, see \code{\link{generate_drug_ADR_pair}}
 }
 \description{
-Generates the drug- and
-ADR history of an individual patient.
-}
-\examples{
-# create a patient
-patient_model <- patient_model_sex(prob_male = 0.5)
-(patient_profile <- patient_model())
-
-# choose a risk function
-risk_model <- risk_model_current_use()
-
-# how the drug is prescribed over time
-drug_model <- drug_model_markov_chain() 
-
-# minimum and maximal probabilities for the drug being prescribed
-min_chance_drug <- probability_model_sex(prob_male = .1, prob_female = .2)
-max_chance_drug <- probability_model_sex(prob_male = .5, prob_female = .53)
-
-# minimum and maximal probabilities for the ADR occurring 
-min_chance_adr <- probability_model_sex(prob_male = .01, prob_female = .05)
-max_chance_adr <- probability_model_sex(prob_male = .2, prob_female = .3)
-
-# chance that the patient is exposed to the drug
-prob_exposure <- probability_model_sex(prob_male = .9, prob_female = .7)
-
-generate_patient(simulation_time = 100, 
-                 risk_model, 
-                 drug_model,
-                 prob_exposure, 
-                 min_chance_drug,
-                 max_chance_drug,
-                 min_chance_adr, 
-                 max_chance_adr, 
-                 patient_profile = patient_profile)                
+Generates a patient, which is a collection of different
+drug-ADR pairs, see function \code{\link{generate_drug_ADR_pair}}.
 }
 \seealso{
-\code{\link{generate_cohort}}
+\code{\link{generate_cohort, generate_drug_ADR_pair, generate_drug_history}}
 }
