@@ -24,6 +24,38 @@ loglikelihood <- function(betas,
 
 
 #' @export
+loglikelihood_past <- function(param,
+                               past,
+                               drug_history,
+                               adr_history) {
+  
+  # extract parameters
+  beta0 <- param[1]
+  beta <- param[2]
+  
+  risk_model <- expard::risk_model_past(past)
+  
+  n_patients <- nrow(drug_history)
+  simulation_time <- ncol(drug_history)
+  
+  # 'convert' the drug prescriptions. They reflect which period is considered
+  # to have an increased risk
+  risks <- matrix(0, nrow = n_patients, ncol = simulation_time)
+  
+  # go over all patients 
+  for (i in 1:n_patients) { 
+    # go over all timepoints 
+    risks[i, ] <- risk_model(drug_history[i, ])
+  }
+  
+  #risks <- Matrix(apply(drug_history, 1, function(d) risk_model(d)))
+  
+  P <- exp(beta0 + risks * beta) / (1 + exp(beta0 + risks * beta))
+  -1 * sum( adr_history * log(P) + (1 - adr_history)*log(1 - P))
+}
+
+
+#' @export
 loglikelihood_withdrawal <- function(param,
                             drug_history,
                             adr_history) {

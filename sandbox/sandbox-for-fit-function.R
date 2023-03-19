@@ -70,9 +70,9 @@ fit_model2(pair, model = "withdrawal")
 
 cohort <-
   generate_cohort(
-    n_patients = 200,
-    risk_model = "risk_model_long_term(1,10)",
-    simulation_time = 40,
+    n_patients = 100,
+    risk_model = "risk_model_current_use()",
+    simulation_time = 10,
     n_drug_ADR_pairs = 1,
     min_chance = .3, 
     max_chance = .9

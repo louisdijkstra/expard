@@ -18,7 +18,6 @@
 #' @examples 
 #' cohort <- expard::generate_cohort(n_patients = 100, simulation_time = 8)
 #' find_best_model(cohort, verbose = FALSE)
-#' @export
 find_best_model <- function(cohort,
                             risk_models = c("immediate",
                                             "immediately_after", 

@@ -109,15 +109,15 @@ fit_model <- function(pair,
     # create 2x2 tables 
     table <- expard::create2x2table(pair, method = "time-point")
     
-    p1 <- table$a / (table$a + table$c) 
-    p0 <- table$b / (table$b + table$d)
+    pi1 <- table$a / (table$a + table$c) 
+    pi0 <- table$b / (table$b + table$d)
     
     fit$n_param <- 2
     fit$loglikelihood <- -1*(table$a)*log(pi1) - (table$c)*log(1 - pi1) - table$b*log(pi0) - (table$d)*log(1 - pi0)
     fit$converged <- TRUE
     
-    fit$pi1 <- pi1
-    fit$pi0 <- pi0
+    fit$p1 <- pi1
+    fit$p0 <- pi0
     
     return(fit)
   }
@@ -141,16 +141,30 @@ fit_model <- function(pair,
     )
     
     estimates <- lapply(past, function(d) { 
-      res <- expard::estimate(pair, 
-                       risk_model = expard::risk_model_past(d))
-      res$past <- d
+      
+      res <- optim(c(0,0,-1),
+                   loglikelihood_past, 
+                   past = d, 
+                   drug_history = pair$drug_history,
+                   adr_history = pair$adr_history,
+                   method = "L-BFGS",
+                   control = list())
+      
+      #res <- expard::estimate(pair, 
+      #                 risk_model = expard::risk_model_past(d))
       return(res)
-      })
+    })
     
-    fit$loglikelihood <- sapply(estimates, function(est) est$loglikelihood)
-    fit$p0 <- sapply(estimates, function(est) est$adr_while_not_at_risk / (est$adr_while_not_at_risk + est$no_adr_while_not_at_risk))
-    fit$p1 <- sapply(estimates, function(est) est$adr_while_at_risk / (est$adr_while_at_risk + est$no_adr_while_at_risk))
-    fit$converged <- TRUE
+    fit$loglikelihood <- sapply(estimates, function(est) est$value)
+    fit$p0 <- sapply(estimates, function(est) {
+      beta0 <- est$par[1]
+      exp(beta0) / (1 + exp(beta0))
+    })
+    fit$p1 <- sapply(estimates, function(est) {
+      beta <- est$par[2]
+      exp(est$par[1] + beta) / (1 + exp(est$par[1] + beta))
+    })
+    fit$converged <- sapply(estimates, function(est) est$convergence == 0)
 
     # select the best model
     #best <- estimates[[1]]
@@ -192,7 +206,7 @@ fit_model <- function(pair,
     fit$rate <- exp(res$par[3])
     
     fit$n_param <- 3
-    fit$loglikelihood <- -1 * res$value
+    fit$loglikelihood <-res$value
     fit$converged <- res$convergence == 0
     
     return(fit)
@@ -216,7 +230,7 @@ fit_model <- function(pair,
     fit$sigma <- exp(res$par[4])
     
     fit$n_param <- 4
-    fit$loglikelihood <- -1 * res$value
+    fit$loglikelihood <- res$value
     fit$converged <- res$convergence == 0
     
     return(fit)
@@ -239,7 +253,7 @@ fit_model <- function(pair,
     fit$rate <- exp(res$par[3])
     
     fit$n_param <- 3
-    fit$loglikelihood <- -1 * res$value
+    fit$loglikelihood <- res$value
     fit$converged <- res$convergence == 0
     
     return(fit)
@@ -265,7 +279,7 @@ fit_model <- function(pair,
     fit$rate <- exp(res$par[5])
     
     fit$n_param <- 5
-    fit$loglikelihood <- -1 * res$value
+    fit$loglikelihood <- res$value
     fit$converged <- res$convergence == 0
     
     return(fit)
@@ -288,7 +302,7 @@ fit_model <- function(pair,
     fit$delay <- exp(res$par[4])
     
     fit$n_param <- 4
-    fit$loglikelihood <- -1 * res$value
+    fit$loglikelihood <- res$value
     fit$converged <- res$convergence == 0
     
     return(fit)
