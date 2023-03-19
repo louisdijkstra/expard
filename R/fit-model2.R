@@ -74,18 +74,16 @@ fit_model2 <- function(pair,
                        parameters = list()) {
  
   # initialize the fit --------------------------------
-  fit <- list(
+  fit <- data.frame(
     n_patients = nrow(pair$drug_history), 
     simulation_time = ncol(pair$drug_history), 
     model = model[1], 
-    est = list(), 
     n_param = NA, 
-    parameters = parameters, 
-    loglikelihood = c(), 
-    converged = c()
+    loglikelihood = NA, 
+    converged = NA
   )
   
-  class(fit) <- c(class(fit), "expardmodel")
+  #class(fit) <- c(class(fit), "expardmodel")
   
   # No association model -------------------------------------------------------
   if (model[1] == "no-association") { 
@@ -95,7 +93,7 @@ fit_model2 <- function(pair,
     
     pi <- (table$a + table$b) / table$n
     
-    fit$est <- list(pi = pi)
+    fit$pi <- pi
     fit$n_param <- 1
     fit$loglikelihood <- -1*((table$a + table$b) * log(pi) + (table$c + table$d) * log(1 - pi))
     fit$converged <- TRUE
@@ -111,14 +109,12 @@ fit_model2 <- function(pair,
     pi1 <- table$a / (table$a + table$c) 
     pi0 <- table$b / (table$b + table$d)
     
-    fit$est <- list(
-      pi1 = pi1, 
-      pi0 = pi0
-    )
-    
     fit$n_param <- 2
     fit$loglikelihood <- -1*(table$a)*log(pi1) - (table$c)*log(1 - pi1) - table$b*log(pi0) - (table$d)*log(1 - pi0)
     fit$converged <- TRUE
+    
+    fit$pi1 <- pi1
+    fit$pi0 <- pi0
     
     return(fit)
   }
@@ -126,7 +122,20 @@ fit_model2 <- function(pair,
   
   
   if (model[1] == "past-use") { 
-    past <- 1:(fit$simulation_time - 1) 
+    
+    past <- 1:(fit$simulation_time - 1)
+    
+    fit <- data.frame(
+      expand.grid(
+        n_patients = nrow(pair$drug_history),
+        simulation_time = ncol(pair$drug_history),
+        model = model[1],
+        n_param = 3,
+        loglikelihood = NA,
+        converged = NA, 
+        past = past
+      )
+    )
     
     estimates <- lapply(past, function(d) { 
       res <- expard::estimate(pair, 
@@ -135,68 +144,38 @@ fit_model2 <- function(pair,
       return(res)
       })
     
+    fit$loglikelihood <- sapply(estimates, function(est) est$loglikelihood)
+    fit$pi0 <- sapply(estimates, function(est) est$adr_while_not_at_risk / (est$adr_while_not_at_risk + est$no_adr_while_not_at_risk))
+    fit$pi1 <- sapply(estimates, function(est) est$adr_while_at_risk / (est$adr_while_at_risk + est$no_adr_while_at_risk))
+    fit$converged <- TRUE
+
     # select the best model
-    best <- estimates[[1]]
+    #best <- estimates[[1]]
     
-    lapply(estimates, function(est) { 
-        if (est$loglikelihood < best$loglikelihood) { 
-          best <<- est   
-        }
-      })
+    #lapply(estimates, function(est) { 
+    #    if (est$loglikelihood < best$loglikelihood) { 
+    #      best <<- est   
+    #    }
+    #  })
     
-    fit$est <- list(
-      pi0 = best$prob_no_adr_with_drug, 
-      pi1 = best$prob_adr_with_drug, 
-      past = best$past
-    )
-    
-    fit$n_param <- 3
-    fit$loglikelihood <- best$loglikelihood
-    fit$converged <- best$converged
+    # fit$est <- list(
+    #   pi0 = best$prob_no_adr_with_drug, 
+    #   pi1 = best$prob_adr_with_drug, 
+    #   past = best$past
+    # )
+    # 
+    # fit$n_param <- 3
+    # fit$loglikelihood <- best$loglikelihood
+    # fit$converged <- best$converged
     
     return(fit)
   }
   
   
-  if (model[1] == "past-use") { 
-    
-    if (!("past" %in% names(parameters))) { 
-      stop("past risk model - tyhe list parameters needs a specification of past")  
-    }
+  if (model[1] == "'withdrawal'") { 
     
     # number of time points in the past
-    past <- parameters$past
     
-    if (past >= fit$simulation_time) { 
-      stop(sprintf("past risk model - number of time points in the past %d is larger than the simulation time T = %d", past, simulation_time)) 
-    }
-    
-    # number of times the ADR does or does not happen
-    # while being at full risk or not
-    adr_while_at_risk        <- 0 
-    no_adr_while_at_risk     <- 0 
-    adr_while_not_at_risk    <- 0 
-    no_adr_while_not_at_risk <- 0 
-    
-    for (k in 1:fit$n_patients) { 
-      for (t in 1:fit$simulation_time) { 
-        if (any(drug_ADR_pair$drug_history[k, max(1,(t - past)):t] == 1)) {
-          # took drug is the recent past
-          if (drug_ADR_pair$adr_history[k, t] == 1) {
-            adr_while_at_risk <- adr_while_at_risk + 1
-          } else {
-            no_adr_while_at_risk <- no_adr_while_at_risk + 1
-          }
-        } else {
-          # did not take drug
-          if (drug_ADR_pair$adr_history[k, t] == 1) {
-            adr_while_not_at_risk <- adr_while_not_at_risk + 1
-          } else {
-            no_adr_while_not_at_risk <- no_adr_while_not_at_risk + 1
-          }
-        }  
-      }  
-    }
 
     pi0 <- adr_while_not_at_risk / (adr_while_not_at_risk + no_adr_while_not_at_risk)
     pi1 <- adr_while_at_risk / (adr_while_at_risk + no_adr_while_at_risk)
