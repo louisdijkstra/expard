@@ -34,17 +34,48 @@ f2 <- fit_model2(cohort[[1]], model = "past-use", parameters = list(past = 4))
 
 pair <- generate_drug_ADR_pair()
 
+param = c(.1, .2, 2)
+
+drug_history = pair$drug_history
+adr_history = pair$adr_history
+
+
+
+
+pair <- cohort[[1]]
+
+param = c(.1, .2, 2)
+loglikelihood_withdrawal(param, pair$drug_history, pair$adr_history)
+
+param = c(.1, .8, 0, 0)
+loglikelihood_delayed(param, pair$drug_history, pair$adr_history)
+
+
+# find the optimal values for beta0 and beta
+res <- optim(c(0,0,-1),
+             expard::loglikelihood_withdrawal, 
+             drug_history = pair$drug_history,
+             adr_history = pair$adr_history,
+             method = "L-BFGS",
+             control = list())
+
+
+lower=c(0, -Inf, -Inf, 0), upper=rep(Inf, 4),
+method="L-BFGS-B"
+
+fit_model2(pair, model = "current-use")
+fit_model2(pair, model = "withdrawal")
 
 
 
 cohort <-
   generate_cohort(
-    n_patients = 1000,
-    risk_model = "risk_model_current_use()",
-    simulation_time = 20,
+    n_patients = 200,
+    risk_model = "risk_model_long_term(1,10)",
+    simulation_time = 40,
     n_drug_ADR_pairs = 1,
-    min_chance = .1, 
-    max_chance = .8
+    min_chance = .3, 
+    max_chance = .9
   )
-
-fit_model2(cohort[[1]], model = "current-use")
+pair <- cohort[[1]]
+fit_model(pair, model = "long-term")

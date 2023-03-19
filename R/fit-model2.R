@@ -60,18 +60,21 @@
 #' fit_model(cohort, risk_model = expard::risk_model_immediate())
 #' # note that the estimators are close to the truth (.3 and .6) 
 #' @export
-fit_model2 <- function(pair,
-                       model = c('no-association', 
-                                 'current-use', 
-                                 'past-use', 
-                                 'withdrawal', 
-                                 'delayed',
-                                 'decaying', 
-                                 'delayed+decaying', 
-                                 'long-term'),
-                       method = c("L-BFGS-B", "Nelder-Mead", "BFGS", "CG", "SANN",
+fit_model <- function(pair,
+                      model = c(
+                        'no-association',
+                        'current-use',
+                        'past-use',
+                        'withdrawal',
+                        'delayed',
+                        'decaying',
+                        'delayed+decaying',
+                        'long-term'
+                      ),
+                      method = c("L-BFGS-B", "Nelder-Mead", "BFGS", "CG", "SANN",
                                  "Brent"),
-                       parameters = list()) {
+                      parameters = list()) {
+  
  
   # initialize the fit --------------------------------
   fit <- data.frame(
@@ -93,7 +96,7 @@ fit_model2 <- function(pair,
     
     pi <- (table$a + table$b) / table$n
     
-    fit$pi <- pi
+    fit$p <- pi
     fit$n_param <- 1
     fit$loglikelihood <- -1*((table$a + table$b) * log(pi) + (table$c + table$d) * log(1 - pi))
     fit$converged <- TRUE
@@ -106,8 +109,8 @@ fit_model2 <- function(pair,
     # create 2x2 tables 
     table <- expard::create2x2table(pair, method = "time-point")
     
-    pi1 <- table$a / (table$a + table$c) 
-    pi0 <- table$b / (table$b + table$d)
+    p1 <- table$a / (table$a + table$c) 
+    p0 <- table$b / (table$b + table$d)
     
     fit$n_param <- 2
     fit$loglikelihood <- -1*(table$a)*log(pi1) - (table$c)*log(1 - pi1) - table$b*log(pi0) - (table$d)*log(1 - pi0)
@@ -145,8 +148,8 @@ fit_model2 <- function(pair,
       })
     
     fit$loglikelihood <- sapply(estimates, function(est) est$loglikelihood)
-    fit$pi0 <- sapply(estimates, function(est) est$adr_while_not_at_risk / (est$adr_while_not_at_risk + est$no_adr_while_not_at_risk))
-    fit$pi1 <- sapply(estimates, function(est) est$adr_while_at_risk / (est$adr_while_at_risk + est$no_adr_while_at_risk))
+    fit$p0 <- sapply(estimates, function(est) est$adr_while_not_at_risk / (est$adr_while_not_at_risk + est$no_adr_while_not_at_risk))
+    fit$p1 <- sapply(estimates, function(est) est$adr_while_at_risk / (est$adr_while_at_risk + est$no_adr_while_at_risk))
     fit$converged <- TRUE
 
     # select the best model
@@ -172,67 +175,126 @@ fit_model2 <- function(pair,
   }
   
   
-  if (model[1] == "'withdrawal'") { 
-    
-    # number of time points in the past
-    
+  
+  if (model[1] == "withdrawal") { 
 
-    pi0 <- adr_while_not_at_risk / (adr_while_not_at_risk + no_adr_while_not_at_risk)
-    pi1 <- adr_while_at_risk / (adr_while_at_risk + no_adr_while_at_risk)
+    res <- optim(c(0,0,-1),
+                 expard::loglikelihood_withdrawal, 
+                 drug_history = pair$drug_history,
+                 adr_history = pair$adr_history,
+                 method = "L-BFGS",
+                 control = list())
     
-    fit$est <- list(
-      pi1 = pi1, 
-      pi0 = pi0
-    )
+    beta0 <- res$par[1]
+    beta <- res$par[2]
+    fit$p0 = exp(beta0) / (1 + exp(beta0))
+    fit$p1 = exp(beta0 + beta) / (1 + exp(beta0 + beta))
+    fit$rate <- exp(res$par[3])
     
     fit$n_param <- 3
-    fit$loglikelihood <- -1*adr_while_at_risk*log(est$pi1) - 
-                      no_adr_while_at_risk*log(1 - est$pi1) - 
-                      adr_while_not_at_risk*log(est$pi0) - 
-                      no_adr_while_not_at_risk*log(1 - est$pi0)
-    fit$converged <- TRUE
+    fit$loglikelihood <- -1 * res$value
+    fit$converged <- res$convergence == 0
     
     return(fit)
   }
-
   
-  # 'convert' the drug prescriptions. They reflect which period is considered
-  # to have an increased risk
-  risks <- matrix(0, nrow = cohort$n_patients, ncol = cohort$simulation_time) 
   
-  # go over all patients 
-  for (i in 1:cohort$n_patients) { 
-    # go over all timepoints 
-    for (t in 1:cohort$simulation_time) { 
-      # determine the risk for patient i with drug history 1,2,..,t
-      risk <- risk_model$fn(cohort$drug_history[i, 1:t])
-      risks[i,t] <- risk
-    }
+  if (model[1] == "delayed") { 
+    
+    res <- optim(c(0,0,0,0),
+                 expard::loglikelihood_delayed, 
+                 drug_history = pair$drug_history,
+                 adr_history = pair$adr_history,
+                 method = "L-BFGS",
+                 control = list())
+    
+    beta0 <- res$par[1]
+    beta <- res$par[2]
+    fit$p0 = exp(beta0) / (1 + exp(beta0))
+    fit$p1 = exp(beta0 + beta) / (1 + exp(beta0 + beta))
+    fit$mu <- exp(res$par[3])
+    fit$sigma <- exp(res$par[4])
+    
+    fit$n_param <- 4
+    fit$loglikelihood <- -1 * res$value
+    fit$converged <- res$convergence == 0
+    
+    return(fit)
   }
+  
 
-  # find the optimal values for beta0 and beta
-  res <- optim(start,
-               loglikelihood, 
-               risks = risks,
-               adr_history = cohort$adr_history,
-               method = method[1],
-               control = list())
-
-  beta0 <- res$par[1]
-  beta <- res$par[2]
-
-  fit <- list(
-    n_patients = cohort$n_patients, 
-    simulation_time = cohort$simulation_time,
-    loglikelihood = -1 * res$value,
-    beta0 = beta0,
-    beta = beta,
-    prob_no_adr_with_drug = exp(beta0) / (1 + exp(beta0)),
-    prob_adr_with_drug = exp(beta0 + beta) / (1 + exp(beta0 + beta)),
-    convergence = res$convergence
-  )
-  class(fit) <- "expardfit"
-  return(fit)
+  if (model[1] == "decaying") { 
+    
+    res <- optim(c(0,0,-1),
+                 expard::loglikelihood_decaying, 
+                 drug_history = pair$drug_history,
+                 adr_history = pair$adr_history,
+                 method = "L-BFGS",
+                 control = list())
+    
+    beta0 <- res$par[1]
+    beta <- res$par[2]
+    fit$p0 = exp(beta0) / (1 + exp(beta0))
+    fit$p1 = exp(beta0 + beta) / (1 + exp(beta0 + beta))
+    fit$rate <- exp(res$par[3])
+    
+    fit$n_param <- 3
+    fit$loglikelihood <- -1 * res$value
+    fit$converged <- res$convergence == 0
+    
+    return(fit)
+  }
+  
+  
+  
+  if (model[1] == "delayed+decaying") { 
+    
+    res <- optim(c(0,0,0,0,0),
+                 expard::loglikelihood_delayed_decaying, 
+                 drug_history = pair$drug_history,
+                 adr_history = pair$adr_history,
+                 method = "L-BFGS",
+                 control = list())
+    
+    beta0 <- res$par[1]
+    beta <- res$par[2]
+    fit$p0 = exp(beta0) / (1 + exp(beta0))
+    fit$p1 = exp(beta0 + beta) / (1 + exp(beta0 + beta))
+    fit$mu <- exp(res$par[3])
+    fit$sigma <- exp(res$par[4])
+    fit$rate <- exp(res$par[5])
+    
+    fit$n_param <- 5
+    fit$loglikelihood <- -1 * res$value
+    fit$converged <- res$convergence == 0
+    
+    return(fit)
+  }
+  
+  
+  
+  if (model[1] == "long-term") { 
+    
+    res <- optim(c(0,0,0,0),
+                 expard::loglikelihood_long_term, 
+                 drug_history = pair$drug_history,
+                 adr_history = pair$adr_history,
+                 method = "L-BFGS",
+                 control = list())
+    
+    beta0 <- res$par[1]
+    beta <- res$par[2]
+    fit$rate <- exp(res$par[3])
+    fit$delay <- exp(res$par[4])
+    
+    fit$n_param <- 4
+    fit$loglikelihood <- -1 * res$value
+    fit$converged <- res$convergence == 0
+    
+    return(fit)
+  }
+  
+  stop("model not known")
 }
 
 #' Print function for the hccd fit_model

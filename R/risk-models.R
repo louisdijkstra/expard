@@ -330,7 +330,7 @@ risk_model_decaying <- function(rate) {
 
 
 
-
+#' @export
 risk_model_delayed_decaying <- function(mu, sigma, rate) {
   
   # check correctness input
