@@ -47,11 +47,5 @@ fit_all_models <- function(pair,
     res <- full_join(res, res_temp[[i]])  
   }
   
-  do.call("rbind", res_temp)
-  
-  
-  res %>% reduce(full_join)
-  
-  Reduce(function(...) merge(..., all=T), res)
-  
+  return(res)
 }
