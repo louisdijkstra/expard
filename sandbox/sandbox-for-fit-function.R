@@ -71,11 +71,13 @@ fit_model2(pair, model = "withdrawal")
 cohort <-
   generate_cohort(
     n_patients = 100,
-    risk_model = "risk_model_current_use()",
-    simulation_time = 10,
+    risk_model = "risk_model_decaying(.5)",
+    simulation_time = 20,
     n_drug_ADR_pairs = 1,
-    min_chance = .3, 
-    max_chance = .9
+    min_chance = .1, 
+    max_chance = .2
   )
 pair <- cohort[[1]]
-fit_model(pair, model = "long-term")
+#fit_model(pair, model = "no-association")
+
+res = fit_all_models(pair)

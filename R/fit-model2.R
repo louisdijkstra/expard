@@ -100,6 +100,8 @@ fit_model <- function(pair,
     fit$n_param <- 1
     fit$loglikelihood <- -1*((table$a + table$b) * log(pi) + (table$c + table$d) * log(1 - pi))
     fit$converged <- TRUE
+    fit$BIC <- fit$n_param * log(fit$n_patients * fit$simulation_time) + 2 * fit$loglikelihood
+    fit$bestBIC <- min(fit$BIC)
     
     return(fit)
   }
@@ -118,6 +120,9 @@ fit_model <- function(pair,
     
     fit$p1 <- pi1
     fit$p0 <- pi0
+    
+    fit$BIC <- fit$n_param * log(fit$n_patients * fit$simulation_time) + 2 * fit$loglikelihood
+    fit$bestBIC <- min(fit$BIC)
     
     return(fit)
   }
@@ -166,6 +171,8 @@ fit_model <- function(pair,
     })
     fit$converged <- sapply(estimates, function(est) est$convergence == 0)
 
+    fit$BIC <- fit$n_param * log(fit$n_patients * fit$simulation_time) + 2 * fit$loglikelihood
+    fit$bestBIC <- min(fit$BIC)
     # select the best model
     #best <- estimates[[1]]
     
@@ -209,6 +216,9 @@ fit_model <- function(pair,
     fit$loglikelihood <-res$value
     fit$converged <- res$convergence == 0
     
+    fit$BIC <- fit$n_param * log(fit$n_patients * fit$simulation_time) + 2 * fit$loglikelihood
+    fit$bestBIC <- min(fit$BIC)
+    
     return(fit)
   }
   
@@ -233,6 +243,9 @@ fit_model <- function(pair,
     fit$loglikelihood <- res$value
     fit$converged <- res$convergence == 0
     
+    fit$BIC <- fit$n_param * log(fit$n_patients * fit$simulation_time) + 2 * fit$loglikelihood
+    fit$bestBIC <- min(fit$BIC)
+    
     return(fit)
   }
   
@@ -255,6 +268,9 @@ fit_model <- function(pair,
     fit$n_param <- 3
     fit$loglikelihood <- res$value
     fit$converged <- res$convergence == 0
+    
+    fit$BIC <- fit$n_param * log(fit$n_patients * fit$simulation_time) + 2 * fit$loglikelihood
+    fit$bestBIC <- min(fit$BIC)
     
     return(fit)
   }
@@ -282,6 +298,9 @@ fit_model <- function(pair,
     fit$loglikelihood <- res$value
     fit$converged <- res$convergence == 0
     
+    fit$BIC <- fit$n_param * log(fit$n_patients * fit$simulation_time) + 2 * fit$loglikelihood
+    fit$bestBIC <- min(fit$BIC)
+    
     return(fit)
   }
   
@@ -304,6 +323,9 @@ fit_model <- function(pair,
     fit$n_param <- 4
     fit$loglikelihood <- res$value
     fit$converged <- res$convergence == 0
+    
+    fit$BIC <- fit$n_param * log(fit$n_patients * fit$simulation_time) + 2 * fit$loglikelihood
+    fit$bestBIC <- min(fit$BIC)
     
     return(fit)
   }
