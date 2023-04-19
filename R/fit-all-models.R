@@ -1,14 +1,3 @@
-
-# 
-# risk_models <- c('no-association', 
-#                  'current-use', 
-#                  'past-use', 
-#                  'withdrawal', 
-#                  'delayed',
-#                  'decaying', 
-#                  'delayed+decaying', 
-#                  'long-term')
-
 #' @export
 fit_all_models <- function(pair,
                            models = c(

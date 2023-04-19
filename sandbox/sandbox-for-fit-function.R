@@ -5,7 +5,28 @@ tables <- create2x2tables(cohort)
 
 expard::create2x2tables(cohort)
 
-m <- fit_model2(cohort[[1]], model = 'past-use')
+m <- fit_model(cohort[[1]], model = 'past-use')
+m <- fit_model(cohort[[1]], model = 'no-association')
+m <- fit_model(cohort[[1]], model = 'withdrawal')
+m <- fit_model(cohort[[1]], model = 'delayed')
+m <- fit_model(cohort[[1]], model = 'decaying')
+m <- fit_model(cohort[[1]], model = 'delayed+decaying')
+m <- fit_model(cohort[[1]], model = 'long-term')
+
+
+r = fit_all_models(cohort[[1]])
+
+model = c(
+  'no-association',
+  'current-use',
+  'past-use',
+  'withdrawal',
+  'delayed',
+  'decaying',
+  'delayed+decaying',
+  'long-term'
+)
+
 m0 <- fit_model2(cohort[[1]], model = "current-use")
 
 f <- estimate(cohort[[1]], risk_model = expard::risk_model_decaying(4))
@@ -81,3 +102,16 @@ pair <- cohort[[1]]
 #fit_model(pair, model = "no-association")
 
 res = fit_all_models(pair)
+
+
+
+model = c(
+  'no-association',
+  'current-use',
+  'past-use',
+  'withdrawal',
+  'delayed',
+  'decaying',
+  'delayed+decaying',
+  'long-term'
+)
