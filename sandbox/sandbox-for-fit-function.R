@@ -1,6 +1,6 @@
 library(expard)
 
-cohort <- generate_cohort(n_patients = 5, risk_model = rep("risk_model_delayed(3, 1)", 4), simulation_time = 5, n_drug_ADR_pairs = 4, )
+cohort <- generate_cohort(n_patients = 50, risk_model = rep("risk_model_delayed(3, 1)", 4), simulation_time = 5, n_drug_ADR_pairs = 4, )
 tables <- create2x2tables(cohort)
 
 expard::create2x2tables(cohort)

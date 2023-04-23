@@ -245,7 +245,8 @@ risk_model_delayed <- function(mu, sigma) {
   
   # check correctness input
   if (mu <= 0) { 
-    stop("mu should be > 0") 
+    mu <- 1e-10
+    #stop("mu should be > 0") 
   }
   
   if (sigma <= 0) { 
@@ -339,7 +340,8 @@ risk_model_delayed_decaying <- function(mu, sigma, rate) {
   }
   
   if (mu <= 0) { 
-    stop("mu should be > 0")  
+    mu <- 1e-10
+    #stop("mu should be > 0")  
   } 
   
   if (sigma <= 0) { 
