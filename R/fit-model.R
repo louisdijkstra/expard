@@ -152,7 +152,7 @@ fit_model <- function(pair,
                    past = d, 
                    drug_history = pair$drug_history,
                    adr_history = pair$adr_history,
-                   method = "L-BFGS",
+                   method = "BFGS",
                    control = list())
       
       #res <- expard::estimate(pair, 
@@ -203,7 +203,7 @@ fit_model <- function(pair,
                  expard::loglikelihood_withdrawal, 
                  drug_history = pair$drug_history,
                  adr_history = pair$adr_history,
-                 method = "L-BFGS",
+                 method = "BFGS",
                  control = list())
     
     beta0 <- res$par[1]
@@ -229,7 +229,7 @@ fit_model <- function(pair,
                  expard::loglikelihood_delayed, 
                  drug_history = pair$drug_history,
                  adr_history = pair$adr_history,
-                 method = "L-BFGS",
+                 method = "BFGS",
                  control = list())
     
     beta0 <- res$par[1]
@@ -256,7 +256,7 @@ fit_model <- function(pair,
                  expard::loglikelihood_decaying, 
                  drug_history = pair$drug_history,
                  adr_history = pair$adr_history,
-                 method = "L-BFGS",
+                 method = "BFGS",
                  control = list())
     
     beta0 <- res$par[1]
@@ -283,7 +283,7 @@ fit_model <- function(pair,
                  expard::loglikelihood_delayed_decaying, 
                  drug_history = pair$drug_history,
                  adr_history = pair$adr_history,
-                 method = "L-BFGS",
+                 method = "BFGS",
                  control = list())
     
     beta0 <- res$par[1]
@@ -312,7 +312,7 @@ fit_model <- function(pair,
                  expard::loglikelihood_long_term, 
                  drug_history = pair$drug_history,
                  adr_history = pair$adr_history,
-                 method = "L-BFGS",
+                 method = "BFGS",
                  control = list())
     
     beta0 <- res$par[1]
