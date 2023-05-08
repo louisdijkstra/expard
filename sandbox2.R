@@ -62,6 +62,7 @@ create2x2table(cohort)
 cohort <- generate_cohort(n_patients = 20, risk_model = rep("risk_model_delayed(3, 1)", 4), simulation_time = 10, n_drug_ADR_pairs = 4, )
 tables <- create2x2tables(cohort)
 
+fit_all_models(cohort[[1]])
 expard::create2x2tables(cohort)
 
 m <- fit_model2(cohort[[1]], model = 'past-use')

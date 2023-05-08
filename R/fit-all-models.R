@@ -40,7 +40,7 @@ fit_all_models <- function(pair,
   r <- r %>% mutate(
     posterior = exp(-delta_BIC / 2) / denominator
   ) %>% 
-    select(model, posterior)
+    dplyr::select(model, posterior)
   
   res <- full_join(r, res)
   
