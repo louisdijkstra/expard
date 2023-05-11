@@ -11,6 +11,8 @@
 #'                    drug prescription history. 
 #'              (Default: \code{0 0 0 0 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0})
 #' @param risk_model One of the risk models 
+#' @param simulation_time If not \code{NULL}, total number of time points, i.e.,  
+#'                   \code{0 0 0 0 1 1 1 1 1 1 0 0 0 0 ...}. (Default: \code{NULL})
 #' @param title Title of the plot
 #' @param ylim The limits of the y-axis: \code{c(ymin, ymax)} 
 #'                (Default: \code{c(0,1)})
@@ -34,11 +36,19 @@
 #' @export
 plot_risk <- function(drug_history = c(rep(0, 4), rep(1, 6), rep(0, 10)), 
                       risk_model = risk_model_immediate(), 
+                      simulation_time = NULL, 
                       title = "", 
                       ylim = c(0,1), 
                       shaded_area = TRUE, 
                       fill = "black", 
                       alpha = 0.3) { 
+  
+  if (!is.null(simulation_time)) { 
+    if (simulation_time < 10) {
+      stop("simulation time must be at least 10")
+    }
+    drug_history <- c(rep(0,4), rep(1,6), rep(0, simulation_time - 10))  
+  }
   
   # determine the risks given the drug prescription history 
   # and the risk model given by risk_model

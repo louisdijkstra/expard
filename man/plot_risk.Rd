@@ -7,6 +7,7 @@
 plot_risk(
   drug_history = c(rep(0, 4), rep(1, 6), rep(0, 10)),
   risk_model = risk_model_immediate(),
+  simulation_time = NULL,
   title = "",
   ylim = c(0, 1),
   shaded_area = TRUE,
@@ -20,6 +21,9 @@ drug prescription history.
 (Default: \code{0 0 0 0 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0})}
 
 \item{risk_model}{One of the risk models}
+
+\item{simulation_time}{If not \code{NULL}, total number of time points, i.e.,
+\code{0 0 0 0 1 1 1 1 1 1 0 0 0 0 ...}. (Default: \code{NULL})}
 
 \item{title}{Title of the plot}
 
