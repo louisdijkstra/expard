@@ -171,9 +171,9 @@ loglikelihood_delayed_decaying <- function(param,
   beta <- param[2]
   mu_log <- param[3]
   sigma_log <- param[4]
-  rate_log <- param[5]
+  phi <- param[5]
   
-  risk_model <- expard::risk_model_delayed_decaying(exp(mu_log), exp(sigma_log), exp(rate_log))
+  risk_model <- expard::risk_model_delayed_decaying(exp(mu_log), exp(sigma_log), exp(phi))
   
   n_patients <- nrow(drug_history)
   simulation_time <- ncol(drug_history)

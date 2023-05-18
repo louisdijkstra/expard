@@ -9,6 +9,7 @@ fit_model(
   model = c("no-association", "current-use", "past-use", "withdrawal", "delayed",
     "decaying", "delayed+decaying", "long-term"),
   method = c("L-BFGS-B", "Nelder-Mead", "BFGS", "CG", "SANN", "Brent"),
+  maxiter = 1000,
   parameters = list()
 )
 }
@@ -16,6 +17,8 @@ fit_model(
 \item{model}{Label for a risk model. Can be either ...}
 
 \item{method}{Methods used by the base \code{\link{optim}}-solver}
+
+\item{maxiter}{Maximum number iterations for the \code{\link{optim}}-solver}
 
 \item{cohort}{A cohort dataset. See details below.}
 

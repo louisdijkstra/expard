@@ -354,6 +354,9 @@ risk_model_delayed_decaying <- function(mu, sigma, rate) {
   #normalizing_factor <- exp(-rate * (time_steps_ago - 1))
   
   function(drug_history, ...) { 
+    if (sum(drug_history) == 0) {
+      return(drug_history)
+    }
     combination <- delay(drug_history) + decay(drug_history)
     combination / max(combination)
   }

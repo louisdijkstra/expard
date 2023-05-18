@@ -28,6 +28,7 @@
 #' @param start Starting point for the base \code{\link{optim}}-solver
 #'              (Default: \code{c(-1,1)})
 #' @param method Methods used by the base \code{\link{optim}}-solver
+#' @param maxiter Maximum number iterations for the \code{\link{optim}}-solver
 #' @param control List used by the base \code{\link{optim}}-solver
 #'               
 #' @return A model fit. A list with the items 
@@ -73,6 +74,7 @@ fit_model <- function(pair,
                       ),
                       method = c("L-BFGS-B", "Nelder-Mead", "BFGS", "CG", "SANN",
                                  "Brent"),
+                      maxiter = 1000, 
                       parameters = list()) {
   
  
@@ -145,20 +147,22 @@ fit_model <- function(pair,
       )
     )
     
+    cat(sprintf("Parameter 'past': \n"))
+    pb <- txtProgressBar(min = 1, max = max(past), style = 3)  
+    
     estimates <- lapply(past, function(d) { 
-      
       res <- optim(c(0,0,-1),
                    loglikelihood_past, 
                    past = d, 
                    drug_history = pair$drug_history,
                    adr_history = pair$adr_history,
                    method = "Nelder-Mead",
-                   control = list())
-      
-      #res <- expard::estimate(pair, 
-      #                 risk_model = expard::risk_model_past(d))
+                   control = list(maxit = 10000))
+      setTxtProgressBar(pb, d)
       return(res)
     })
+    
+    close(pb)
     
     fit$loglikelihood <- sapply(estimates, function(est) est$value)
     fit$p0 <- sapply(estimates, function(est) {
@@ -204,7 +208,7 @@ fit_model <- function(pair,
                  drug_history = pair$drug_history,
                  adr_history = pair$adr_history,
                  method = "Nelder-Mead",
-                 control = list())
+                 control = list(maxit = 10000))
     
     beta0 <- res$par[1]
     beta <- res$par[2]
@@ -230,7 +234,7 @@ fit_model <- function(pair,
                  drug_history = pair$drug_history,
                  adr_history = pair$adr_history,
                  method = "Nelder-Mead",
-                 control = list())
+                 control = list(maxit = 10000))
     
     beta0 <- res$par[1]
     beta <- res$par[2]
@@ -257,7 +261,7 @@ fit_model <- function(pair,
                  drug_history = pair$drug_history,
                  adr_history = pair$adr_history,
                  method = "Nelder-Mead",
-                 control = list())
+                 control = list(maxit = 10000))
     
     beta0 <- res$par[1]
     beta <- res$par[2]
@@ -279,12 +283,12 @@ fit_model <- function(pair,
   
   if (model[1] == "delayed+decaying") { 
     
-    res <- optim(c(0,0,0,0,0),
+    res <- optim(c(0,0,0,0,-1),
                  expard::loglikelihood_delayed_decaying, 
                  drug_history = pair$drug_history,
                  adr_history = pair$adr_history,
                  method = "Nelder-Mead",
-                 control = list())
+                 control = list(maxit = 10000))
     
     beta0 <- res$par[1]
     beta <- res$par[2]
@@ -313,7 +317,7 @@ fit_model <- function(pair,
                  drug_history = pair$drug_history,
                  adr_history = pair$adr_history,
                  method = "Nelder-Mead",
-                 control = list())
+                 control = list(maxit = 10000))
     
     beta0 <- res$par[1]
     beta <- res$par[2]
