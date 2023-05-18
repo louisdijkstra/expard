@@ -4,7 +4,7 @@ library(tictoc)
 tic()
 
 cohort <- generate_cohort(
-  n_patients = 100,
+  n_patients = 1000,
   simulation_time = 100,
   n_drug_ADR_pairs = 1,
   risk_model = "risk_model_current_use()",
