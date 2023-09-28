@@ -157,7 +157,7 @@ fit_model <- function(pair,
                    drug_history = pair$drug_history,
                    adr_history = pair$adr_history,
                    method = "Nelder-Mead",
-                   control = list(maxit = 10000))
+                   control = list(maxit = maxiter))
       setTxtProgressBar(pb, d)
       return(res)
     })
@@ -208,7 +208,7 @@ fit_model <- function(pair,
                  drug_history = pair$drug_history,
                  adr_history = pair$adr_history,
                  method = "Nelder-Mead",
-                 control = list(maxit = 10000))
+                 control = list(maxit = maxiter))
     
     beta0 <- res$par[1]
     beta <- res$par[2]
@@ -234,7 +234,7 @@ fit_model <- function(pair,
                  drug_history = pair$drug_history,
                  adr_history = pair$adr_history,
                  method = "Nelder-Mead",
-                 control = list(maxit = 10000))
+                 control = list(maxit = maxiter))
     
     beta0 <- res$par[1]
     beta <- res$par[2]
@@ -261,7 +261,7 @@ fit_model <- function(pair,
                  drug_history = pair$drug_history,
                  adr_history = pair$adr_history,
                  method = "Nelder-Mead",
-                 control = list(maxit = 10000))
+                 control = list(maxit = maxiter))
     
     beta0 <- res$par[1]
     beta <- res$par[2]
@@ -288,7 +288,7 @@ fit_model <- function(pair,
                  drug_history = pair$drug_history,
                  adr_history = pair$adr_history,
                  method = "Nelder-Mead",
-                 control = list(maxit = 10000))
+                 control = list(maxit = maxiter))
     
     beta0 <- res$par[1]
     beta <- res$par[2]
@@ -317,7 +317,7 @@ fit_model <- function(pair,
                  drug_history = pair$drug_history,
                  adr_history = pair$adr_history,
                  method = "Nelder-Mead",
-                 control = list(maxit = 10000))
+                 control = list(maxit = maxiter))
     
     beta0 <- res$par[1]
     beta <- res$par[2]
