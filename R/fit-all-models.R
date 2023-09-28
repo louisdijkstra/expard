@@ -12,11 +12,12 @@ fit_all_models <- function(pair,
                            ),
                            method = c("L-BFGS-B", "Nelder-Mead", "BFGS", "CG", "SANN",
                                       "Brent"),
+                           maxiter = 1000, 
                            parameters = list()) { 
   
   res_temp <- lapply(models, function(model) { 
     cat(sprintf("Fitting model %s...\n", model))
-    fit_model(pair, model, method, parameters)  
+    fit_model(pair, model, method, maxiter, parameters)  
   })
   
   res <- res_temp[[1]]
