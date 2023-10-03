@@ -21,6 +21,17 @@ cohort <- generate_cohort(
 )
 pair <- cohort[[1]]
 
+res = fit_all_models(pair)
+
+res <- expard::fit_all_models(pair,
+                              models = c(
+                                'no-association',
+                                'current-use',
+                                'past-use'#,
+                                #'decaying'
+                              ),
+                              maxiter = 20)
+
 # initialize the fit --------------------------------
 
 # past <- 1:(fit$simulation_time - 1)
