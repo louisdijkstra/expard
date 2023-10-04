@@ -30,29 +30,33 @@ pair <- cohort[[1]]
 # process the data -------------------------------------------------------------
 
 determine_time_steps_since_start <- function(drug_history) { 
+  simulation_time <- length(drug_history)
   sapply(1:simulation_time, function(t) { 
     # currently exposed or did not take the drug yet
     if (sum(drug_history[1:t]) == 0) { 
       return(0)  
     } else {
       time_steps_ago = t - min(which(drug_history[1:t] == 1))
-      return(dnorm(time_steps_ago, mu, sigma) / normalizing_factor) 
+      return(time_steps_ago) 
     }
   })
 }
 
 
+
+
 n_patients <- nrow(pair$drug_history)
 
 
-
-time_steps_ago <- do.call(rbind, 
+time_steps_since_start <- do.call(rbind, 
                           lapply(1:n_patients, function(i) { 
-                            determine_time_steps_ago(pair$drug_history[i, ])
+                            determine_time_steps_since_start(pair$drug_history[i, ])
                           }))
 
 
-time_steps_ago
+time_steps_since_start
+
+freq_table <- determine_frequency_unique_values(time_steps_since_start, pair$adr_history)
 
 pi0 <- .1
 pi1 <- .2
@@ -105,9 +109,24 @@ determine_loglikelihood_delayed <- function(param,
   sum(freq_table$loglikelihood)
 }
 
+determine_loglikelihood_delayed(param, freq_table)
+loglikelihood_delayed(param, pair$drug_history, pair$adr_history)
 
+fit <- optim(param,
+            expard::loglikelihood_delayed, 
+                    freq_table = freq_table,
+                    method = "Nelder-Mead",
+                    control = list(maxit = 1e8))
 
+beta0 <- fit$par[1]
+beta <- fit$par[2]
+mu_log <- fit$par[3]
+sigma_log <- fit$par[4]
 
+exp(beta0) / (1 + exp(beta0))
+exp(beta) / (1 + exp(beta)) 
+exp(mu_log)
+exp(sigma_log)
 
 freq_table <- expard::determine_frequency_unique_values(time_steps_ago, pair$adr_history)
 
@@ -118,3 +137,5 @@ beta0 <- param[1]
 beta <- param[2]
 mu_log <- param[3]
 sigma_log <- param[4]
+
+expard::fit_model(pair, model = "delayed")
