@@ -215,21 +215,42 @@ fit_model <- function(pair,
   
   if (model[1] == "withdrawal") { 
 
+    # determine times since last exposure for a drug history of a single patient
+    determine_time_steps_ago <- function(drug_history) {
+      sapply(1:length(drug_history), function(t) { 
+        # currently exposed or did not take the drug yet
+        if (drug_history[t] == 1 || sum(drug_history[1:t]) == 0) { 
+          return(0)  
+        } else {
+          time_steps_ago = t - max(which(drug_history[1:t] == 1))
+          return(time_steps_ago) 
+        }
+      })
+    }
+    
+    n_patients <- nrow(pair$drug_history)
+    
+    time_steps_ago <- do.call(rbind, 
+                              lapply(1:n_patients, function(i) { 
+                                determine_time_steps_ago(pair$drug_history[i, ])
+                              }))
+    
+    freq_table <- expard::determine_frequency_unique_values(time_steps_ago, pair$adr_history)
+    
     res <- optim(c(0,0,-1),
-                 expard::loglikelihood_withdrawal, 
-                 drug_history = pair$drug_history,
-                 adr_history = pair$adr_history,
+                 determine_loglikelihood_withdrawal, 
+                 freq_table = freq_table,
                  method = "Nelder-Mead",
                  control = list(maxit = maxiter))
     
     beta0 <- res$par[1]
     beta <- res$par[2]
     fit$p0 = exp(beta0) / (1 + exp(beta0))
-    fit$p1 = exp(beta0 + beta) / (1 + exp(beta0 + beta))
+    fit$p1 = exp(beta) / (1 + exp(beta))
     fit$rate <- exp(res$par[3])
     
     fit$n_param <- 3
-    fit$loglikelihood <-res$value
+    fit$loglikelihood <- res$value
     fit$converged <- res$convergence == 0
     
     fit$BIC <- fit$n_param * log(fit$n_patients * fit$simulation_time) + 2 * fit$loglikelihood

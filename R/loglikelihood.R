@@ -57,34 +57,39 @@ loglikelihood_past <- function(param,
 
 #' @export
 loglikelihood_withdrawal <- function(param,
-                            drug_history,
-                            adr_history) {
+                            freq_table) {
   
   # extract parameters
   beta0 <- param[1]
   beta <- param[2]
   phi <- param[3]
   
-  risk_model <- expard::risk_model_withdrawal(exp(phi))
+  # extract parameters
+  beta0 <- param[1]
+  beta <- param[2]
+  phi <- param[3]
   
+  # transform to regular parameters
+  pi0 <- exp(beta0) / (1 + exp(beta0))
+  pi1 <- exp(beta) / (1 + exp(beta))
+  rate <- exp(phi)
   
-  n_patients <- nrow(drug_history)
-  simulation_time <- ncol(drug_history)
+  # determine the risks given the time_since last exposure and the rate 
+  # of the withdrawal model
+  freq_table <- freq_table %>% mutate(
+    risk_value = exp(-rate * (unique_value - 1))
+  )
   
-  # 'convert' the drug prescriptions. They reflect which period is considered
-  # to have an increased risk
-  risks <- matrix(0, nrow = n_patients, ncol = simulation_time)
+  # the risk when the time_since is 0 (never exposed or currently exposed)
+  # is zero
+  freq_table$risk_value[1] <- 0
   
-  # go over all patients 
-  for (i in 1:n_patients) { 
-    # go over all timepoints 
-    risks[i, ] <- risk_model(drug_history[i, ])
-  }
+  # determine the log-likelihood given the risks
+  freq_table <- freq_table %>% rowwise() %>% 
+    mutate(loglikelihood = -1*(n_adr*log((pi1 - pi0)*risk_value + pi0) + 
+                                 n_no_adr * log(1 - (pi1 - pi0)*risk_value - pi0)))
   
-  #risks <- Matrix(apply(drug_history, 1, function(d) risk_model(d)))
-  
-  P <- exp(beta0 + risks * beta) / (1 + exp(beta0 + risks * beta))
-  -1 * sum( adr_history * log(P) + (1 - adr_history)*log(1 - P))
+  sum(freq_table$loglikelihood)
 }
 
 
