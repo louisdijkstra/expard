@@ -1,6 +1,11 @@
 library(expard)
 library(dplyr)
 
+logit <- function(p) { 
+  log(p / (1 - p))  
+}
+
+
 # simulate some data -----------------------------------------------------------
 
 cohort <- generate_cohort(
@@ -37,15 +42,24 @@ determine_time_steps_ago <- function(drug_history) {
 n_patients <- nrow(pair$drug_history)
 
 # determine the time_steps_ago for every patient
-time_steps_ago <- unlist(
+# time_steps_ago <- unlist(
+#   lapply(1:n_patients, function(i) { 
+#    determine_time_steps_ago(pair$drug_history[i, ])
+#     }))
+
+time_steps_ago <- do.call(rbind, 
   lapply(1:n_patients, function(i) { 
     determine_time_steps_ago(pair$drug_history[i, ])
     }))
 
+# dim(time_steps_ago)
+
 # determine the frequencies with which time_steps_ago appear in the data set
 # and how often the ADR occurs etc.
 
-freq_table <- lapply(sort(unique(time_steps_ago)), function(time_since) {
+# unique(as.vector(time_steps_ago))
+
+freq_table <- lapply(sort(unique(as.vector(time_steps_ago))), function(time_since) {
   
   # where does this 'time_since' occur in the data
   indices <- which(time_steps_ago == time_since)
@@ -64,6 +78,10 @@ freq_table <- lapply(sort(unique(time_steps_ago)), function(time_since) {
 # turn into a tibble
 freq_table <- as_tibble(do.call(rbind, freq_table))
 
+
+# freq_table$freq %>% sum()
+# freq_table$n_adr %>% sum()
+# sum(pair$adr_history)
 
 determine_loglikelihood_withdrawal <- function(param, 
                                                freq_table) {
@@ -102,6 +120,8 @@ determine_loglikelihood_withdrawal <- function(param,
   #sum( adr_history * log(P) + (1 - adr_history)*log(1 - P))
   sum(freq_table$loglikelihood)
 }
+
+
 
 param <- c(logit(.1),logit(.2),log(.5))
 determine_loglikelihood_withdrawal(param, freq_table)
