@@ -25,6 +25,7 @@ cohort <- generate_cohort(
 
 pair <- cohort[[1]]
 
+fit_model(pair, model = "long-term")
 
 
 determine_time_steps <- function(drug_history) {

@@ -238,7 +238,7 @@ fit_model <- function(pair,
     freq_table <- expard::determine_frequency_unique_values(time_steps_ago, pair$adr_history)
     
     res <- optim(c(0,0,-1),
-                 determine_loglikelihood_withdrawal, 
+                 expard::loglikelihood_withdrawal, 
                  freq_table = freq_table,
                  method = "Nelder-Mead",
                  control = list(maxit = maxiter))
@@ -286,7 +286,7 @@ fit_model <- function(pair,
     freq_table <- determine_frequency_unique_values(time_steps_since_start, pair$adr_history)
     
     res <- optim(c(0,0,1,1),
-                 loglikelihood_delayed, 
+                 expard::loglikelihood_delayed, 
                  freq_table = freq_table,
                  method = "Nelder-Mead",
                  control = list(maxit = maxiter))
@@ -368,20 +368,47 @@ fit_model <- function(pair,
   
   if (model[1] == "delayed+decaying") { 
     
-    res <- optim(c(0,0,0,0,-1),
+    determine_time_steps <- function(drug_history) { 
+      simulation_time <- length(drug_history)
+      sapply(1:simulation_time, function(t) { 
+        # currently exposed or did not take the drug yet
+        if (sum(drug_history[1:t]) == 0) { 
+          return(0)  
+        } else {
+          time_steps_ago = t - min(which(drug_history[1:t] == 1))
+          return(time_steps_ago) 
+        }
+      })
+    }
+    
+    n_patients <- nrow(pair$drug_history)
+    
+    time_steps <- do.call(rbind,
+                          lapply(1:n_patients, function(i) {
+                            determine_time_steps(pair$drug_history[i,])
+                          }))
+    
+    freq_table <- determine_frequency_unique_values(time_steps, pair$adr_history)
+    
+    
+    res <- optim(c(-1, 0, log(1), log(1), log(1)),
                  expard::loglikelihood_delayed_decaying, 
-                 drug_history = pair$drug_history,
-                 adr_history = pair$adr_history,
+                 freq_table = freq_table,
                  method = "Nelder-Mead",
                  control = list(maxit = maxiter))
     
+    
     beta0 <- res$par[1]
     beta <- res$par[2]
-    fit$p0 = exp(beta0) / (1 + exp(beta0))
-    fit$p1 = exp(beta0 + beta) / (1 + exp(beta0 + beta))
-    fit$mu <- exp(res$par[3])
-    fit$sigma <- exp(res$par[4])
-    fit$rate <- exp(res$par[5])
+    mu_log <- res$par[3]
+    sigma_log <- res$par[4]
+    rate_log <- res$par[5]
+    
+    fit$p0 <- exp(beta0) / (1 + exp(beta0))
+    fit$p1 <- exp(beta) / (1 + exp(beta)) 
+    fit$mu <- exp(mu_log)
+    fit$sigma <- exp(sigma_log)
+    fit$rate <- exp(rate_log)
     
     fit$n_param <- 5
     fit$loglikelihood <- res$value
