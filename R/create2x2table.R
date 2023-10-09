@@ -100,21 +100,21 @@ create2x2table <- function(drug_ADR_pair, method = c("time-point",
     drug <- drug_ADR_pair$drug_history == 1 
     ADR <- drug_ADR_pair$adr_history == 1
     
-    table$a <- sum(drug & ADR)
-    table$b <- sum(!drug & ADR)
-    table$c <- sum(drug & !ADR)
-    table$d <- sum(!drug & !ADR)
+    table$a <- sum(drug & ADR, na.rm = TRUE)
+    table$b <- sum(!drug & ADR, na.rm = TRUE)
+    table$c <- sum(drug & !ADR, na.rm = TRUE)
+    table$d <- sum(!drug & !ADR, na.rm = TRUE)
   }
   
   if (method[1] == "patient") {
     # go over all patients
-    drug <- rowSums(as.matrix(drug_ADR_pair$drug_history)) > 0
-    ADR <- rowSums(as.matrix(drug_ADR_pair$adr_history)) > 0
+    drug <- rowSums(as.matrix(drug_ADR_pair$drug_history), na.rm = TRUE) > 0
+    ADR <- rowSums(as.matrix(drug_ADR_pair$adr_history), na.rm = TRUE) > 0
     
-    table$a <- sum(drug & ADR)
-    table$b <- sum(!drug & ADR)
-    table$c <- sum(drug & !ADR)
-    table$d <- sum(!drug & !ADR)
+    table$a <- sum(drug & ADR, na.rm = TRUE)
+    table$b <- sum(!drug & ADR, na.rm = TRUE)
+    table$c <- sum(drug & !ADR, na.rm = TRUE)
+    table$d <- sum(!drug & !ADR, na.rm = TRUE)
   }
   
   if (method[1] == "drug-era") { 
@@ -122,20 +122,31 @@ create2x2table <- function(drug_ADR_pair, method = c("time-point",
     
     
     sapply(1:cohort$n_patients, function(k) {
+      
+      # remove any none observed time points. They are represented by NAs
+      indices_observed_time_points_drug <- which(!is.na(drug_ADR_pair$drug_history[k, ]))
+      indices_observed_time_points_adr <- which(!is.na(drug_ADR_pair$adr_history[k, ]))
+      indices_observed_time <- union(indices_observed_time_points_drug, indices_observed_time_points_adr)
+      
+      drug_history_patient <- drug_ADR_pair$drug_history[k, indices_observed_time_points]
+      adr_history_patient <- drug_ADR_pair$adr_history[k, indices_observed_time_points]
+    
+      simulation_time_patient <- length(drug_history_patient)
+      
       # first initialize some variables to keep track
       # in which era we (drug or non-drug) and whether
       # the ADR occured during this era
       in_drug_era <-
-        drug_ADR_pair$drug_history[k, 1] == 1  # are we currently in a drug era?
+        drug_history_patient[1] == 1  # are we currently in a drug era?
       ADR_happened <-
-        drug_ADR_pair$adr_history[k, 1] == 1    # did the ADR occur during this era?
+        drug_history_patient[1] == 1    # did the ADR occur during this era?
       
-      sapply(2:(cohort$simulation_time - 1), function(t) {
+      sapply(2:(simulation_time_patient - 1), function(t) {
         if (in_drug_era) {
           # in drug-era
-          if (drug_ADR_pair$drug_history[k, t]) {
+          if (drug_history_patient[t]) {
             # drug prescribed on time point t?
-            if (drug_ADR_pair$adr_history[k, t]) {
+            if (drug_history_patient[t]) {
               # did the ADR occur?
               ADR_happened <- TRUE
             }
@@ -150,9 +161,9 @@ create2x2table <- function(drug_ADR_pair, method = c("time-point",
           }
         } else {
           # not in drug-era
-          if (drug_ADR_pair$drug_history[k, t] == 0) {
+          if (drug_history_patient[t] == 0) {
             # drug not prescribed
-            if (drug_ADR_pair$adr_history[k, t] == 1) {
+            if (drug_history_patient[t] == 1) {
               # ADR occurred
               ADR_happened <- TRUE
             }
@@ -167,7 +178,7 @@ create2x2table <- function(drug_ADR_pair, method = c("time-point",
           }
           
         }
-        ADR_happened <- drug_ADR_pair$adr_history[k, t] == 1
+        ADR_happened <- adr_history_patient[t] == 1
       })
     })
   }
