@@ -136,6 +136,14 @@ fit_model <- function(pair,
     simulation_time <- ncol(pair$drug_history)
     n_patients = nrow(pair$drug_history)
     
+    # determine how many time points have not been observed
+    not_observed_drug <- is.na(pair$drug_history)
+    not_observed_adr <- is.na(pair$adr_history)
+    not_observed <- not_observed_drug | not_observed_adr
+    
+    # total number of observed timepoints
+    n_observed_timepoints <- n_patients*simulation_time - sum(not_observed)
+    
     past <- 1:(simulation_time - 1)
     
     fit <- data.frame(
@@ -164,7 +172,9 @@ fit_model <- function(pair,
       # go over all patients 
       for (i in 1:n_patients) { 
         # go over all timepoints 
-        risks[i, ] <- risk_model(pair$drug_history[i, ])
+        risks[i, ] <- apply_function_to_observed_timepoints(pair$drug_history[i, ], 
+                                                             risk_model)
+        # risks[i, ] <- risk_model(pair$drug_history[i, ])
       }
       
       # given the risk, determine the 2x2 table: 
@@ -178,13 +188,13 @@ fit_model <- function(pair,
       #         |    n.1     n.0     | simulation_time*n_patients
       
       # determine the marginals
-      n1. <- sum(risks)
-      n0. <- simulation_time*n_patients - n1. 
-      n.1 <- sum(pair$adr_history)
-      n.0 <- simulation_time*n_patients - n.1 
+      n1. <- sum(risks, na.rm = TRUE)
+      n0. <- n_observed_timepoints - n1. 
+      n.1 <- sum(pair$adr_history, na.rm = TRUE)
+      n.0 <- n_observed_timepoints - n.1 
       
       # determine the entries 
-      n11 <- sum(risks & pair$adr_history)
+      n11 <- sum(risks & pair$adr_history, na.rm = TRUE)
       n01 <- n.1 - n11
       n10 <- n1. - n11
       n00 <- n0. - n01
@@ -228,11 +238,16 @@ fit_model <- function(pair,
       })
     }
     
+    #apply_function_to_observed_timepoints(pair$drug_history[10,], 
+    #                                      determine_time_steps_ago)
+    
     n_patients <- nrow(pair$drug_history)
     
     time_steps_ago <- do.call(rbind, 
                               lapply(1:n_patients, function(i) { 
-                                determine_time_steps_ago(pair$drug_history[i, ])
+                                apply_function_to_observed_timepoints(pair$drug_history[i, ], 
+                                                                      determine_time_steps_ago)
+                                #determine_time_steps_ago(pair$drug_history[i, ])
                               }))
     
     freq_table <- expard::determine_frequency_unique_values(time_steps_ago, pair$adr_history)
@@ -278,9 +293,11 @@ fit_model <- function(pair,
     n_patients <- nrow(pair$drug_history)
     
     time_steps_since_start <- do.call(rbind, 
-                                      lapply(1:n_patients, function(i) { 
-                                        determine_time_steps_since_start(pair$drug_history[i, ])
-                                      }))
+                              lapply(1:n_patients, function(i) { 
+                                apply_function_to_observed_timepoints(pair$drug_history[i, ], 
+                                                                      determine_time_steps_since_start)
+                                #determine_time_steps_ago(pair$drug_history[i, ])
+                              }))
     
     
     freq_table <- determine_frequency_unique_values(time_steps_since_start, pair$adr_history)
@@ -333,10 +350,13 @@ fit_model <- function(pair,
     
     n_patients <- nrow(pair$drug_history)
     
-    time_steps <- do.call(rbind,
-                          lapply(1:n_patients, function(i) {
-                            determine_time_steps(pair$drug_history[i,])
+    time_steps <- do.call(rbind, 
+                          lapply(1:n_patients, function(i) { 
+                               apply_function_to_observed_timepoints(pair$drug_history[i, ], 
+                                                       determine_time_steps)
+                                        #determine_time_steps_ago(pair$drug_history[i, ])
                           }))
+  
     
     freq_table <- determine_frequency_unique_values(time_steps, pair$adr_history)
     
@@ -383,9 +403,11 @@ fit_model <- function(pair,
     
     n_patients <- nrow(pair$drug_history)
     
-    time_steps <- do.call(rbind,
-                          lapply(1:n_patients, function(i) {
-                            determine_time_steps(pair$drug_history[i,])
+    time_steps <- do.call(rbind, 
+                          lapply(1:n_patients, function(i) { 
+                            apply_function_to_observed_timepoints(pair$drug_history[i, ], 
+                                                                  determine_time_steps)
+                            #determine_time_steps_ago(pair$drug_history[i, ])
                           }))
     
     freq_table <- determine_frequency_unique_values(time_steps, pair$adr_history)
@@ -443,9 +465,11 @@ fit_model <- function(pair,
     
     n_patients <- nrow(pair$drug_history)
     
-    time_steps <- do.call(rbind,
-                          lapply(1:n_patients, function(i) {
-                            determine_time_steps(pair$drug_history[i,])
+    time_steps <- do.call(rbind, 
+                          lapply(1:n_patients, function(i) { 
+                            apply_function_to_observed_timepoints(pair$drug_history[i, ], 
+                                                                  determine_time_steps)
+                            #determine_time_steps_ago(pair$drug_history[i, ])
                           }))
     
     freq_table <- determine_frequency_unique_values(time_steps, pair$adr_history)

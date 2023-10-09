@@ -126,7 +126,7 @@ create2x2table <- function(drug_ADR_pair, method = c("time-point",
       # remove any none observed time points. They are represented by NAs
       indices_observed_time_points_drug <- which(!is.na(drug_ADR_pair$drug_history[k, ]))
       indices_observed_time_points_adr <- which(!is.na(drug_ADR_pair$adr_history[k, ]))
-      indices_observed_time <- union(indices_observed_time_points_drug, indices_observed_time_points_adr)
+      indices_observed_time_points <- union(indices_observed_time_points_drug, indices_observed_time_points_adr)
       
       drug_history_patient <- drug_ADR_pair$drug_history[k, indices_observed_time_points]
       adr_history_patient <- drug_ADR_pair$adr_history[k, indices_observed_time_points]

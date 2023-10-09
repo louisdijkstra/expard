@@ -61,7 +61,7 @@ risk[indices_not_NA] <- observed_risks
 
 cohort <- generate_cohort(
   n_patients = 1000,
-  simulation_time = 100,
+  simulation_time = 10,
   n_drug_ADR_pairs = 1,
   risk_model = c("risk_model_decaying(.9)"),
   min_chance_drug = .1,
@@ -75,10 +75,22 @@ cohort <- generate_cohort(
 
 pair <- cohort[[1]]
 
-pair$drug_history[10, 20] <- NA
+pair$drug_history[10, 3:5] <- NA
+
+pair$drug_history[12, 1:5] <- NA
+
+pair$adr_history[10, 4:5] <- NA
+
+pair$adr_history[12, 1:5] <- NA
 
 expard::create2x2table(pair, method = "patient")
 
-expard::create2x2table(pair, method = "patient")
+expard::create2x2table(pair, method = "time-point")
 
+expard::create2x2table(pair, method = "drug-era")
 
+pair
+
+r <- fit_all_models(pair, models = c('no-association', 'current-use', 
+                                     'past-use', 'withdrawal', 'delayed', 
+                                     'decaying'))
