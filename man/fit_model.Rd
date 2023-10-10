@@ -10,7 +10,8 @@ fit_model(
     "decaying", "delayed+decaying", "long-term"),
   method = c("L-BFGS-B", "Nelder-Mead", "BFGS", "CG", "SANN", "Brent"),
   maxiter = 1000,
-  parameters = list()
+  parameters = list(),
+  mc.cores = 1
 )
 }
 \arguments{

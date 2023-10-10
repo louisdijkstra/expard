@@ -31,5 +31,5 @@ determine_frequency_unique_values <- function(mat, adr_history) {
     })
   
   # create a tibble and return it
-  return(as_tibble(do.call(rbind, freq_table)))
+  return(dplyr::as_tibble(do.call(rbind, freq_table)))
 }

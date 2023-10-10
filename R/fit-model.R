@@ -75,7 +75,8 @@ fit_model <- function(pair,
                       method = c("L-BFGS-B", "Nelder-Mead", "BFGS", "CG", "SANN",
                                  "Brent"),
                       maxiter = 1000, 
-                      parameters = list()) {
+                      parameters = list(), 
+                      mc.cores = 1) {
   
  
   # initialize the fit --------------------------------
@@ -209,6 +210,94 @@ fit_model <- function(pair,
     })
     
     close(pb)
+    
+    fit$loglikelihood <- sapply(estimates, function(est) est$value)
+    fit$p0 <- sapply(estimates, function(est) est$p0 )
+    fit$p1 <- sapply(estimates, function(est) est$p1 )
+    fit$converged <- TRUE #sapply(estimates, function(est) est$convergence == 0)
+    
+    fit$BIC <- fit$n_param * log(fit$n_patients * fit$simulation_time) + 2 * fit$loglikelihood
+    fit$bestBIC <- min(fit$BIC)
+    
+    return(fit)
+  }
+  
+  # if it is a single past model with a fixed past parameter
+  if (substr(model[1], start = 1, stop = 9) == "past-use(") { 
+    
+    substr(model[1], start = 1, stop = 9)
+    d <- as.integer(substr(model[1], 10, nchar(model[1])-1))
+    
+    simulation_time <- ncol(pair$drug_history)
+    n_patients = nrow(pair$drug_history)
+    
+    # determine how many time points have not been observed
+    not_observed_drug <- is.na(pair$drug_history)
+    not_observed_adr <- is.na(pair$adr_history)
+    not_observed <- not_observed_drug | not_observed_adr
+    
+    # total number of observed timepoints
+    n_observed_timepoints <- n_patients*simulation_time - sum(not_observed)
+    
+    past <- d
+    
+    fit <- data.frame(
+      expand.grid(
+        n_patients = n_patients,
+        simulation_time = simulation_time,
+        model = model[1],
+        n_param = 3,
+        loglikelihood = NA,
+        converged = NA, 
+        past = past
+      )
+    )
+    
+    estimates <- lapply(past, function(d) { 
+      # select the risk model 
+      risk_model <- expard::risk_model_past(d)
+      
+      # 'convert' the drug prescriptions. They reflect which period is considered
+      # to have an increased risk
+      risks <- matrix(0, nrow = n_patients, ncol = simulation_time)
+      
+      # go over all patients 
+      for (i in 1:n_patients) { 
+        # go over all timepoints 
+        risks[i, ] <- apply_function_to_observed_timepoints(pair$drug_history[i, ], 
+                                                            risk_model)
+        # risks[i, ] <- risk_model(pair$drug_history[i, ])
+      }
+      
+      # given the risk, determine the 2x2 table: 
+      # 
+      #                  ADR
+      #         |     1       0      |        
+      #       ------------------------------------
+      # risk  1 |    n11     n10     | n1.
+      #       0 |    n01     n00     | n0. 
+      #       ------------------------------------
+      #         |    n.1     n.0     | simulation_time*n_patients
+      
+      # determine the marginals
+      n1. <- sum(risks, na.rm = TRUE)
+      n0. <- n_observed_timepoints - n1. 
+      n.1 <- sum(pair$adr_history, na.rm = TRUE)
+      n.0 <- n_observed_timepoints - n.1 
+      
+      # determine the entries 
+      n11 <- sum(risks & pair$adr_history, na.rm = TRUE)
+      n01 <- n.1 - n11
+      n10 <- n1. - n11
+      n00 <- n0. - n01
+      
+      pi1 <- n11 / n1.
+      pi0 <- n01 / n0.
+      
+      return(list(p1 = pi1, 
+                  p0 = pi0, 
+                  value = -1*n11*log(pi1) - n10*log(1 - pi1) - n01*log(pi0) - n00*log(1 - pi0)))
+    })
     
     fit$loglikelihood <- sapply(estimates, function(est) est$value)
     fit$p0 <- sapply(estimates, function(est) est$p0 )
