@@ -30,7 +30,7 @@ plot_fit <- function(fit,
     })
   }
   
-  if (!is.null(past_range)) {
+  if (!is.null(past_values)) {
     fit <- fit %>% filter(model != 'past-use' | past %in% past_values)
   }
 
