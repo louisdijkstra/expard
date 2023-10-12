@@ -42,9 +42,13 @@ plot_fit <- function(fit,
     filter(BIC == min(BIC))  %>% 
     arrange(BIC)
   
+  min_BIC <- min(best_fit$BIC)
+  max_BIC <- max(best_fit$BIC)
+  
   ggplot(best_fit) +
     geom_bar(aes(x = reorder(model, BIC), y = BIC), stat="identity") + 
-    scale_y_continuous(expand = expansion(mult = c(0, .02))) + #expand = c(0, 100)) + 
+    coord_cartesian(ylim=c(min_BIC,max_BIC)) + 
+    scale_y_continuous(expand = expansion(mult = c(0.1, .1))) + #expand = c(0, 100)) + 
     theme_bw() +
     theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
     xlab("model") 
