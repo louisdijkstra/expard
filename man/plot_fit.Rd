@@ -4,15 +4,21 @@
 \alias{plot_fit}
 \title{Plot the Fit}
 \usage{
-plot_fit(fit, xlab = "model", past_range = NULL)
+plot_fit(
+  fit,
+  x_label = "model",
+  title = "",
+  y_range = NULL,
+  past_values = NULL
+)
 }
 \arguments{
 \item{fit}{The fit}
 
-\item{xlab}{The x-label}
-
-\item{past}{If not \code{NULL}, a select number of values for past are
+\item{past_values}{If not \code{NULL}, a select number of values for past are
 used for the plot}
+
+\item{xlab}{The x-label}
 }
 \value{
 ggplot

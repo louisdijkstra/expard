@@ -5,17 +5,19 @@
 #' 
 #' @param fit The fit 
 #' @param xlab The x-label
-#' @param past If not \code{NULL}, a select number of values for past are 
+#' @param past_values If not \code{NULL}, a select number of values for past are 
 #'             used for the plot
 #' 
 #' @return ggplot 
 #' @export
 plot_fit <- function(fit, 
-                     xlab = "model", 
+                     x_label = "model", 
+                     title = "", 
+                     y_range = NULL, 
                      past_values = NULL) {
   
   
-  
+  # if one run the fit_all_models in parallel, process the data 
   if('past-use(1)' %in% fit$model) {
     simulation_time <- fit$simulation_time[1]
     
@@ -30,26 +32,43 @@ plot_fit <- function(fit,
     })
   }
   
+  # Use only the 'past-use' models for which the past parameter falls in the given range
   if (!is.null(past_values)) {
     fit <- fit %>% filter(model != 'past-use' | past %in% past_values)
   }
 
+  # get the best BIC fit for each model
   best_fit <- fit %>% group_by(model) %>% 
     filter(BIC == min(BIC))  %>% 
+    arrange(past) %>% 
+    filter(row_number() == 1) %>% 
     arrange(BIC)
-  
-  best_fit <- fit %>% group_by(model) %>% 
-    filter(BIC == min(BIC))  %>% 
-    arrange(BIC)
-  
+
+  # get the overall minimum and maximum BIC value
   min_BIC <- min(best_fit$BIC)
   max_BIC <- max(best_fit$BIC)
   
+  if (is.null(y_range)) {
+    y_range <- c(min_BIC,max_BIC)
+  }
+  
+  
+  # plot just the best fit
   ggplot(best_fit) +
-    geom_bar(aes(x = reorder(model, BIC), y = BIC), stat="identity") + 
-    coord_cartesian(ylim=c(min_BIC,max_BIC)) + 
-    scale_y_continuous(expand = expansion(mult = c(0.1, .1))) + #expand = c(0, 100)) + 
+    geom_bar(aes(x = reorder(model, BIC), y = BIC), stat="identity") +
+    coord_cartesian(ylim=y_range) + 
+    ggtitle(title) + 
+    #scale_y_continuous(expand = expansion(mult = c(0.1, .1))) + #expand = c(0, 100)) + 
     theme_bw() +
     theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
-    xlab("model") 
+    xlab(x_label) 
+  
+  # plot just the best fit
+  # ggplot(best_fit) +
+  #   geom_bar(aes(x = reorder(model, BIC), y = BIC), stat="identity") +
+  #   coord_cartesian(ylim=y_range) + 
+  #   scale_y_continuous(expand = expansion(mult = c(0.1, .1))) + #expand = c(0, 100)) + 
+  #   theme_bw() +
+  #   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+  #   xlab("model") 
 }
