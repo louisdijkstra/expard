@@ -10,6 +10,8 @@ fit_all_models <- function(pair,
                              'delayed+decaying',
                              'long-term'
                            ),
+                           zero_patients = 0, 
+                           zero_timepoints = 0, 
                            method = c("L-BFGS-B", "Nelder-Mead", "BFGS", "CG", "SANN",
                                       "Brent"),
                            maxiter = 1000, 
@@ -28,7 +30,7 @@ fit_all_models <- function(pair,
   
   fit_model_local_function <- function(model) {
     cat(sprintf("Fitting model %s...\n", model))
-    fit_model(pair, model, method, maxiter, parameters) 
+    fit_model(pair, model, zero_patients, zero_timepoints, method, maxiter, parameters) 
   }
   
   if (run_parallel) {
@@ -45,12 +47,12 @@ fit_all_models <- function(pair,
     
     res_temp <- parLapply(cluster, models, function(model) { 
       cat(sprintf("Fitting model %s...\n", model))
-      expard::fit_model(pair, model, method, maxiter, parameters) 
+      expard::fit_model(pair, model, zero_patients, zero_timepoints, method, maxiter, parameters) 
       })#fit_model_local_function(model))
   } else {
     res_temp <- lapply(models, function(model) { 
       cat(sprintf("Fitting model %s...\n", model))
-      expard::fit_model(pair, model, method, maxiter, parameters) 
+      expard::fit_model(pair, model, zero_patients, zero_timepoints, method, maxiter, parameters) 
     })#fit_model_local_function(model))
   }
   if (run_parallel) {

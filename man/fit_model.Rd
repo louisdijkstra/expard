@@ -8,6 +8,8 @@ fit_model(
   pair,
   model = c("no-association", "current-use", "past-use", "withdrawal", "delayed",
     "decaying", "delayed+decaying", "long-term"),
+  zero_patients = 0,
+  zero_timepoints = 0,
   method = c("L-BFGS-B", "Nelder-Mead", "BFGS", "CG", "SANN", "Brent"),
   maxiter = 1000,
   parameters = list(),

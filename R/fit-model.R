@@ -72,6 +72,8 @@ fit_model <- function(pair,
                         'delayed+decaying',
                         'long-term'
                       ),
+                      zero_patients = 0, 
+                      zero_timepoints = 0, 
                       method = c("L-BFGS-B", "Nelder-Mead", "BFGS", "CG", "SANN",
                                  "Brent"),
                       maxiter = 1000, 
@@ -81,7 +83,7 @@ fit_model <- function(pair,
  
   # initialize the fit --------------------------------
   fit <- data.frame(
-    n_patients = nrow(pair$drug_history), 
+    n_patients = nrow(pair$drug_history) + zero_patients, 
     simulation_time = ncol(pair$drug_history), 
     model = model[1], 
     n_param = NA, 
@@ -96,6 +98,9 @@ fit_model <- function(pair,
     
     # determine the 2x2 table
     table <- expard::create2x2table(pair, method = "time-point")
+    
+    # add all the time points of patients that were never exposed 
+    table$d <- table$d + zero_timepoints
     
     pi <- (table$a + table$b) / table$n
     
@@ -113,6 +118,9 @@ fit_model <- function(pair,
   if (model[1] == "current-use") {
     # create 2x2 tables 
     table <- expard::create2x2table(pair, method = "time-point")
+    
+    # add all the time points of patients that were never exposed 
+    table$d <- table$d + zero_timepoints
     
     pi1 <- table$a / (table$a + table$c) 
     pi0 <- table$b / (table$b + table$d)
@@ -135,7 +143,7 @@ fit_model <- function(pair,
   if (model[1] == "past-use") { 
     
     simulation_time <- ncol(pair$drug_history)
-    n_patients = nrow(pair$drug_history)
+    n_patients = nrow(pair$drug_history) 
     
     # determine how many time points have not been observed
     not_observed_drug <- is.na(pair$drug_history)
@@ -143,13 +151,13 @@ fit_model <- function(pair,
     not_observed <- not_observed_drug | not_observed_adr
     
     # total number of observed timepoints
-    n_observed_timepoints <- n_patients*simulation_time - sum(not_observed)
+    n_observed_timepoints <- n_patients*simulation_time - sum(not_observed) + zero_timepoints
     
     past <- 1:(simulation_time - 1)
     
     fit <- data.frame(
       expand.grid(
-        n_patients = n_patients,
+        n_patients = n_patients + zero_patients,
         simulation_time = simulation_time,
         model = model[1],
         n_param = 3,
@@ -229,7 +237,7 @@ fit_model <- function(pair,
     d <- as.integer(substr(model[1], 10, nchar(model[1])-1))
     
     simulation_time <- ncol(pair$drug_history)
-    n_patients = nrow(pair$drug_history)
+    n_patients = nrow(pair$drug_history) 
     
     # determine how many time points have not been observed
     not_observed_drug <- is.na(pair$drug_history)
@@ -237,13 +245,13 @@ fit_model <- function(pair,
     not_observed <- not_observed_drug | not_observed_adr
     
     # total number of observed timepoints
-    n_observed_timepoints <- n_patients*simulation_time - sum(not_observed)
+    n_observed_timepoints <- n_patients*simulation_time - sum(not_observed) + zero_timepoints
     
     past <- d
     
     fit <- data.frame(
       expand.grid(
-        n_patients = n_patients,
+        n_patients = n_patients + zero_patients,
         simulation_time = simulation_time,
         model = model[1],
         n_param = 3,
@@ -341,6 +349,10 @@ fit_model <- function(pair,
     
     freq_table <- expard::determine_frequency_unique_values(time_steps_ago, pair$adr_history)
     
+    # add zero time points
+    freq_table[1, 'freq'] <- freq_table[1, 'freq'] + zero_timepoints 
+    freq_table[1, 'n_no_adr'] <- freq_table[1, 'n_no_adr'] + zero_timepoints 
+    
     res <- optim(c(0,0,-1),
                  expard::loglikelihood_withdrawal, 
                  freq_table = freq_table,
@@ -390,6 +402,11 @@ fit_model <- function(pair,
     
     
     freq_table <- determine_frequency_unique_values(time_steps_since_start, pair$adr_history)
+    
+    # add zero time points
+    freq_table[1, 'freq'] <- freq_table[1, 'freq'] + zero_timepoints 
+    freq_table[1, 'n_no_adr'] <- freq_table[1, 'n_no_adr'] + zero_timepoints 
+    
     
     res <- optim(c(0,0,1,1),
                  expard::loglikelihood_delayed, 
@@ -449,6 +466,10 @@ fit_model <- function(pair,
     
     freq_table <- determine_frequency_unique_values(time_steps, pair$adr_history)
     
+    # add zero time points
+    freq_table[1, 'freq'] <- freq_table[1, 'freq'] + zero_timepoints 
+    freq_table[1, 'n_no_adr'] <- freq_table[1, 'n_no_adr'] + zero_timepoints 
+    
     res <- optim(c(-1,0,log(1)),
                  expard::loglikelihood_decaying, 
                  freq_table = freq_table,
@@ -501,6 +522,9 @@ fit_model <- function(pair,
     
     freq_table <- determine_frequency_unique_values(time_steps, pair$adr_history)
     
+    # add zero time points
+    freq_table[1, 'freq'] <- freq_table[1, 'freq'] + zero_timepoints 
+    freq_table[1, 'n_no_adr'] <- freq_table[1, 'n_no_adr'] + zero_timepoints 
     
     res <- optim(c(-1, 0, log(1), log(1), log(1)),
                  expard::loglikelihood_delayed_decaying, 
@@ -562,6 +586,10 @@ fit_model <- function(pair,
                           }))
     
     freq_table <- determine_frequency_unique_values(time_steps, pair$adr_history)
+    
+    # add zero time points
+    freq_table[1, 'freq'] <- freq_table[1, 'freq'] + zero_timepoints 
+    freq_table[1, 'n_no_adr'] <- freq_table[1, 'n_no_adr'] + zero_timepoints 
     
     res <- optim(c(0,0,0,0),
                  expard::loglikelihood_long_term, 
