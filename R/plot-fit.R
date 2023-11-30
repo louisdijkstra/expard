@@ -51,7 +51,17 @@ plot_fit <- function(fit,
   if (is.null(y_range)) {
     y_range <- c(min_BIC,max_BIC)
   }
+
+  old_model_label <- c("past-use", "current-use", "no-association")
+  new_model_label <- c("past use", "current use", "no association")
   
+  # Use sapply to replace each occurrence in the input_vector
+  best_fit$model <- sapply(best_fit$model, function(x) {
+    for (i in seq_along(old_model_label)) {
+      x <- gsub(old_model_label[i], new_model_label[i], x)
+    }
+    return(x)
+  })
   
   # plot just the best fit
   ggplot(best_fit) +
