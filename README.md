@@ -1,10 +1,15 @@
-#expard: a simulator for exposure models
-----------------------------------------
+# `expard`: Simulating and Fitting Exposure Models
+-----------------------------------------------
 
-`expard` is a `R` simulator for longitudinal health care claims data. It can be used for simulating large numbers of patients, 
-observed over many time points. The package leans heavily on  `R`'s functional programming aspect and makes it easy to specify complex relationships between drug exposures and adverse drug reactions (ADRs) which can depend on numerous aspects of the patients (sex, age, region etc.). 
+`expard` constitutes an `R` package encompassing two primary functionalities:
 
-### Usage
+1. It serves as a simulator for electronic healthcare data, enabling the simulation of extensive patient populations observed across multiple time points. Leveraging `R`'s functional programming features, the package facilitates the straightforward specification of intricate relationships between drug exposures and adverse drug reactions (ADRs). These relationships may be contingent on various patient attributes such as sex, age, region, among others.
+
+2. The package includes a methodology designed to fit eight exposure models outlined in the associated paper to electronic healthcare data.
+
+## Usage
+
+### Simulator
 
 The main function of the package is `generate_cohort` (see `?generate_cohort`). For example, 
 
@@ -58,11 +63,16 @@ simulates a cohort, where
             the drug history has the highest possible effect
             Must have a length of `n_drug_ADR_pairs`.
 
-### Acknowledgements
+### Exposure Model Fit
+
+One can fit the eight exposure models by running `fit_all_models.R`. For more 
+information, see the comments to `fit_model`.
+
+## Acknowledgements
 
 We gratefully acknowledge the financial support from the innovation fund (“Innovationsfonds”) of the Federal Joint Committee in Germany (grant number: 01VSF16020).
 
-### Contact
+## Contact
 
 Louis Dijkstra\
 Leibniz Institute for Prevention Research & Epidemiology  
